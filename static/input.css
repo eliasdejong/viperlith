@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@source "../templates/**/*.{html,js}";
+
+
+@font-face {
+	font-family: 'audiowide';
+	src: url('/static/fonts/audiowide/audiowide-regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
+@theme {
+	--font-audiowide: 'audiowide', monospace;
+}

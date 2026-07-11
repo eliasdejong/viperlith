@@ -1,0 +1,50 @@
+<body class="flex flex-row h-screen bg-slate-950">
+	<div class="w-1/5 flex flex-col bg-slate-800
+				p-4 gap-3">
+		<button class="px-2 h-12 bg-slate-500 hover:bg-slate-400
+						hover:cursor-pointer
+						rounded-md">
+			(+) New chat
+		</button>
+		<hr class="text-slate-500">
+		<button class="px-2 h-12 overflow-hidden hover:bg-slate-700
+						text-white
+						border-2 border-slate-500
+						hover:cursor-pointer
+						rounded-md">
+			Bla bla bla 
+		</button>
+	</div>
+	<div class="flex flex-col justify-center items-center flex-grow">
+		<div class="flex flex-col gap-12">
+			<div class="flex flex-row items-center">
+				<img class="w-44 h-44" src="/static/datastargpt_logo.png" alt="DatastarGPT logo">
+				<p class="text-5xl font-audiowide text-white">DatastarGPT</p>
+			</div>
+			<div class="flex flex-row gap-3">
+				<textarea
+					type="text"
+					data-bind:message
+					data-on:keydown="evt.key == 'Enter' && !evt.shiftKey
+									? (evt.preventDefault(), el.value != '' && @post('/send-message'))
+									: null"
+					placeholder="Type your message..."
+					autocapitalize="off"
+					autocomplete="off"
+					autocorrect="off"
+					spellcheck="false"
+					class="h-32 w-full p-2 bg-slate-500
+							align-top 
+							rounded-md
+							focus:outline-none focus:ring-3 focus:ring-cyan-100 focus:border-transparent transition duration-100
+							resize-none"
+				></textarea>
+				<button class="w-24 h-full bg-cyan-200 hover:bg-cyan-100
+							hover:cursor-pointer
+							rounded-md">
+					Send
+				</button>
+			</div>
+		</div>
+	</div>
+</body>
