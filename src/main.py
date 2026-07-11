@@ -17,8 +17,6 @@ session_config = CookieBackendConfig(
 	secret=base64.b64decode(os.getenv("SESSION_KEY"))
 )
 
-import uvloop
-
 @asynccontextmanager
 async def lifespan(app: Litestar):
 	# main_loop_task = asyncio.create_task(chat.main_loop())

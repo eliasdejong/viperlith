@@ -9,6 +9,15 @@ from collections.abc import AsyncGenerator
 from src.util.jinja import templates
 
 
+# state_changed_event = asyncio.Event()
+# if notify:
+# 	state_changed_event.set()
+# 	state_changed_event.clear()
+
+# next_frame_time = event_loop.time()
+# next_frame_time += 1 / FRAME_RATE
+# await asyncio.sleep(max(0, next_frame_time - event_loop.time()))
+
 
 def render(sid: str) -> str:
 	t = templates.get_template("chat/main.html")
