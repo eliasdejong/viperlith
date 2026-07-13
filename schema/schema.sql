@@ -3,7 +3,7 @@
 
 create table if not exists users (
 	id integer primary key,
-	session_id text not null,
+	session_id text not null unique,
 	active_conversation_id integer references conversations(id) on delete set null,
     created_ts text default current_timestamp not null
 );

@@ -4,19 +4,10 @@ from litestar.di import NamedDependency
 from litestar.connection import Request
 from litestar.response import Response, Stream
 
-from collections.abc import AsyncGenerator
-
 from src.util.jinja import templates
+from src.util.db_read_con import con
+from src.util.sse_generator import sse_generator
 
-
-# state_changed_event = asyncio.Event()
-# if notify:
-# 	state_changed_event.set()
-# 	state_changed_event.clear()
-
-# next_frame_time = event_loop.time()
-# next_frame_time += 1 / FRAME_RATE
-# await asyncio.sleep(max(0, next_frame_time - event_loop.time()))
 
 
 def render(sid: str) -> str:
@@ -35,25 +26,10 @@ async def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 		media_type="text/html",
 	)
 
-async def updates_generator(sid: str) -> AsyncGenerator[str]:
-	try:
-		while True:
-			html = render(sid)
-			yield (
-				"event: datastar-patch-elements\n"
-				"data: selector body\n"
-				"data: mode outer\n"
-				"data: elements " + html.replace("\n", "\ndata: elements ")
-				+ "\n\n"
-			)
-	except Exception as e:
-	# except asyncio.CancelledError as e:
-		print(f'Stream ended: {type(e).__name__}: {e}', flush=True)
-
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 	return Stream(
-		content=updates_generator(),
+		content=sse_generator(render, sid),
 		media_type="text/event-stream",
 		headers={
 			"Cache-Control": "no-cache",
@@ -65,5 +41,6 @@ router = Router(
 	path="/",
 	route_handlers=[
 		get_root,
+		get_updates,
 	]
 )

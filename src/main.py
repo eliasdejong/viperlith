@@ -19,11 +19,12 @@ session_config = CookieBackendConfig(
 
 @asynccontextmanager
 async def lifespan(app: Litestar):
-	# main_loop_task = asyncio.create_task(chat.main_loop())
+	# setup
 	yield
-	# main_loop_task.cancel()
+	# cleanup
 
 app = Litestar(
+	debug=os.getenv("DEBUG") == "1",
 	route_handlers=[
 		chat_router,
 		create_static_files_router(path="/static", directories=["static"]),
@@ -39,8 +40,6 @@ app = Litestar(
 		brotli_lgblock=0,
 		brotli_gzip_fallback=True,
 	),
-	dependencies={
-		"sid": get_session_id
-	},
+	dependencies={"sid": get_session_id},
 	# template_config=template_config,
 )

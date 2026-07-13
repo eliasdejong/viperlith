@@ -5,7 +5,7 @@ apsw.bestpractice.apply(apsw.bestpractice.recommended)
 
 
 con = apsw.Connection(
-	os.getenv("DB_PATH"),
+	os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE")),
 	flags=apsw.SQLITE_OPEN_READONLY,
 )
 con.pragma("cache_size", 2048)

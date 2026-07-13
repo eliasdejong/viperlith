@@ -12,3 +12,8 @@ dependencies = [
     "uvicorn>=0.49.0",
     "uvloop>=0.22.1",
 ]
+
+[dependency-groups]
+dev = [
+    "watchfiles>=1.2.0",
+]
