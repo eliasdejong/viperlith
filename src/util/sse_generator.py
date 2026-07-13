@@ -29,4 +29,4 @@ async def sse_generator(render: Callable[..., str], *args, **kwargs) -> AsyncGen
 			)
 	except Exception as e:
 	# except asyncio.CancelledError as e:
-		print(f'Stream ended: {type(e).__name__}: {e}', flush=True)
+		print(f"Stream ended: {type(e).__name__}: {e}", flush=True)
