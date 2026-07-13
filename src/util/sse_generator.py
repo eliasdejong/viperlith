@@ -20,8 +20,6 @@ async def sse_generator(render: Callable[..., str], *args, **kwargs) -> AsyncGen
 				continue
 			prev_data_version = data_version
 
-			print(event_loop.time(), flush=True)
-
 			yield (
 				"event: datastar-patch-elements\n"
 				"data: selector body\n"
