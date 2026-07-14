@@ -8,10 +8,6 @@ if __name__ == "__main__":
 		os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE")),
 		flags=apsw.SQLITE_OPEN_READWRITE | apsw.SQLITE_OPEN_CREATE,
 	)
-	if con.pragma("user_version") == 0:
-		with open("schema/schema.sql") as f:
-			con.execute(f.read())
-			con.pragma("user_version", 1)
 	for fname in sorted(os.listdir("schema/migrations")):
 		if not fname.endswith(".sql"):
 			continue
