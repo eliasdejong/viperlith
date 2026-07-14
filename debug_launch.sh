@@ -1,5 +1,5 @@
 #!/bin/bash
-trap 'kill -KILL -$$' EXIT
+trap 'kill -TERM -$$' EXIT
 
 set -a; source .env; set +a
 
