@@ -3,6 +3,10 @@ import glob
 import time
 
 
+
+for f in glob.glob("/dev/shm/datastar-gpt-cmdqueue-*"):
+    os.remove(f)
+
 # SHM_PREFIX = "datastar-gpt-cmdqueue-"
 # WRITER_STARTUP_TIMEOUT_SEC = 10.0
 
