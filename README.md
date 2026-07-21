@@ -58,10 +58,13 @@ A typical interaction cycle might go like this:
 9. Client receives the new page and Datastar morphs it into their local DOM
 10. Client sees the updated page
 
-
-## Create directory for database file in `/var/lib`
+## How to run
+### 1: Create directory for database file in `/var/lib`
 	sudo mkdir -p /var/lib/viperlith
 	sudo chown $USER /var/lib/viperlith
+
+### 2: Run the launch script
+	./launch.sh
 
 ## Remove OpenAI
 This project includes [openai](https://github.com/openai/openai-python) for the LLM demo. If you don't need it, remove it like so:
