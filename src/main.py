@@ -9,7 +9,7 @@ import base64
 from contextlib import asynccontextmanager
 
 from src.util.session_id import get_session_id
-from src.chat import router as chat_router
+from src.chat.router import router as chat_router
 
 
 session_config = CookieBackendConfig(

@@ -1,7 +1,7 @@
 import os
 import asyncio
 from collections.abc import AsyncGenerator
-from src.util.db_read_con import con
+from src.util.db_write_con import con
 
 
 

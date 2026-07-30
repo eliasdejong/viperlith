@@ -5,7 +5,7 @@ from litestar.connection import Request
 from litestar.response import Response, Stream
 
 from src.util.jinja import templates
-from src.util.db_read_con import con
+from src.util.db_write_con import con
 from src.util.sse_generator import sse_generator
 
 
