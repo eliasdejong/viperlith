@@ -6,57 +6,17 @@ Streaming hypermedia makes it possible to build rich interactive user experience
 It consists of the following components:
 1. [Litestar ASGI framework](https://litestar.dev/): Uses up to [10x less memory as compared to FastAPI](https://github.com/kunesj/fastapi-litestar-memory-benchmark).
 2. [MsgSpec](https://msgspec.dev/): A lot of FastAPI's memory is consumed by [Pydantic data validation](https://pydantic.dev/docs/validation/latest/get-started/). MsgSpec provides the same validation capabilities while being [an order of magnitude faster](https://msgspec.dev/benchmarks).
-3. SQLite through [APSW](https://github.com/rogerbinns/apsw): SQLite offers minimal operation overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. By serializing writes on the application layer, the infamous `SQLITE_BUSY` error can be entirely avoided.
-4. `spsc-ring-threadsafe`: A thread-safe SPSC queue for Python, implemented on a ring buffer written in C. Used with shared memory to queue commands from workers to the single-writer.
-5. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
-6. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
-7. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
+3. SQLite through [APSW](https://github.com/rogerbinns/apsw): SQLite offers minimal operation overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides more control, features and better debug information compared to Python's builtin `sqlite3` module.
+4. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
+5. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
+6. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
+
 
 ## Architecture
 Traditional SPA architectures expose JSON/REST endpoints on the server, then build page elements on the frontend with JavaScript & reactive components. Hypermedia Driven Applications (HDA) instead render HTML markup on the server and then send it to the client to immediately update their view.
 
 `datastar.js` is a 11kB script enabling HTML updates sent from the server to be 'morphed' into the local DOM over an SSE stream. The server dictates when updates are sent. Typically, the entire page can be constructed from a single `render()` function on the backend. For reference on SSE, see this [Server Sent Events overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
 
-Viperlith uses a CQRS architecture where reads are separated from writes.
-Web workers handling requests are themselves not allowed to write to the database. Instead, a standalone 'single-writer' process has exclusive write access:
-```
-                            Viperlith CQRS Architecture                           
-                                                                                  
-┌───────────────────────┐    ┌───────────────────────────────────────────────────┐
-│ Single-writer process │    │                uvicorn --workers N                │
-│                       │    │ ┌─────────────┐                                   │
-│  ┌─────────────────┐  │    │ │  Web Worker │                                   │
-│  │                 ├──│────│─┤      1      │  ┌─────────────┐                  │
-│  │ MPSC queue      │  │    │ └──────┬──────┘  │  Web Worker │                  │
-│  │ (shared memory) ├──│────│────────│─────────┤      2      │  ┌─────────────┐ │
-│  │                 │  │    │        │         └──────┬──────┘  │  Web Worker │ │
-│  │                 ├──│────│────────│────────────────│─────────┤      N      │ │
-│  └─────────────────┘  │    │        │                │         └─────┬───────┘ │
-└───────────┬───────────┘    └────────│────────────────│───────────────│─────────┘
-            │                         │                │               │          
-            │Read/Write               │Read            │Read           │Read      
-            │                         │                │               │          
-┌───────────┴─────────────────────────┴────────────────┴───────────────┴─────────┐
-│                                                                                │
-│                            SQLite (mmap + WAL mode)                            │
-│                                                                                │
-└────────────────────────────────────────────────────────────────────────────────┘
-```
-If a client request needs to affect a write to the database, the worker will place a command into the queue for the single-writer.
-
-This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered in practice. Because workers can read from the same `mmap` cache, reads scale horizontally with core count. Writes are batched for maximum throughput using nested transactions (`SAVEPOINT`) while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed interval.
-
-A typical interaction cycle goes like this:
-1. User performs an action inside the UI
-2. Fetch request is fired to an action endpoint (e.g. `/click-button`)
-3. Web worker receives the request, and places a command in the MPSC queue
-4. Single-writer reads the command from the queue
-5. Single-writer commits a write-transaction to the database
-6. The write becomes visible to all workers
-7. The worker holding the SSE stream to the client re-renders the page, based on the new server state
-8. The worker holding the SSE stream sends the new page over the stream (brotli compressed)
-9. Client receives the new page and Datastar morphs it into their local DOM
-10. Client sees the updated page
 
 ## How to run
 ### 1: Create directory for database file in `/var/lib`
