@@ -1,3 +1,4 @@
+import os
 import asyncio
 from litestar import Router, get, post
 from litestar.di import NamedDependency
@@ -10,9 +11,25 @@ from src.util.sse_generator import sse_generator
 
 
 
+FRAME_DURATION_SEC = 1 / float(os.getenv("FRAME_RATE"))
+
+async def main_loop():
+	next_frame_time = asyncio.get_event_loop().time()
+	while True:
+		
+		
+		next_frame_time += FRAME_DURATION_SEC
+		await asyncio.sleep(max(0, next_frame_time - asyncio.get_event_loop().time()))
+
 def render(sid: str) -> str:
+
+
 	t = templates.get_template("chat/main.html")
-	return t.render()
+	return t.render(
+		contex={
+
+		}
+	)
 
 @get("/")
 async def get_root(request: Request, sid: NamedDependency[str]) -> Response:

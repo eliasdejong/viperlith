@@ -20,9 +20,9 @@ con.pragma("page_size", 32768)
 con.pragma("optimize", 0x10002)
 
 
-async def db_analyze_loop(con: apsw.Connection, interval_hours: int):
+async def db_analyze_loop():
 	while True:
-		await asyncio.sleep(interval_hours * 3600)
+		await asyncio.sleep(int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600)
 		try:
 			con.pragma("optimize", 0x00010)
 		except Exception:

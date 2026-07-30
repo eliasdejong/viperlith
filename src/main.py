@@ -12,6 +12,7 @@ import src.util.migrate
 from src.util.db_write_con import con, db_analyze_loop
 from src.util.session_id import get_session_id
 from src.chat.router import router as chat_router
+from src.chat.router import main_loop as chat_main_loop
 
 
 
@@ -22,19 +23,15 @@ session_config = CookieBackendConfig(
 @asynccontextmanager
 async def lifespan(app: Litestar):
 	# setup
-	db_analyze_task = asyncio.create_task(
-		db_analyze_loop(
-			con,
-			int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")),
-		)
-	)
+	tasks = [
+		asyncio.create_task(db_analyze_loop()),
+		asyncio.create_task(chat_main_loop()),
+	]
 	yield
 	# cleanup
-	db_analyze_task.cancel()
-	try:
-		await db_analyze_task
-	except asyncio.CancelledError:
-		pass
+	for t in tasks:
+		t.cancel()
+	await asyncio.gather(*tasks, return_exceptions=True)
 	con.pragma("optimize", 0x00002)
 	con.pragma("wal_checkpoint", "truncate")
 
