@@ -1,7 +1,5 @@
 import os
 from jinja2 import Environment, FileSystemLoader
-# from litestar.plugins.jinja import JinjaTemplateEngines
-# from litestar.template.config import TemplateConfig
 
 
 templates = Environment(
@@ -11,7 +9,3 @@ templates = Environment(
 	auto_reload=os.getenv("DEBUG") == "1",
 	cache_size=400,
 )
-
-# template_config = TemplateConfig(
-# 	engine=JinjaTemplateEngine.from_environment(templates),
-# )

@@ -9,7 +9,6 @@ import base64
 from contextlib import asynccontextmanager
 
 from src.util.session_id import get_session_id
-# from src.util.jinja import template_config
 from src.chat import router as chat_router
 
 
@@ -41,5 +40,4 @@ app = Litestar(
 		brotli_gzip_fallback=True,
 	),
 	dependencies={"sid": get_session_id},
-	# template_config=template_config,
 )
