@@ -2,7 +2,6 @@ import os
 from src.util.db_write_con import con
 
 
-
 for fname in sorted(os.listdir("migrations")):
 	if not fname.endswith(".sql"):
 		continue
