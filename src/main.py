@@ -8,8 +8,10 @@ from litestar.static_files import create_static_files_router
 import base64
 from contextlib import asynccontextmanager
 
+from src.util.db_write_con import con, db_analyze_loop
 from src.util.session_id import get_session_id
 from src.chat.router import router as chat_router
+
 
 
 session_config = CookieBackendConfig(
@@ -19,8 +21,21 @@ session_config = CookieBackendConfig(
 @asynccontextmanager
 async def lifespan(app: Litestar):
 	# setup
+	db_analyze_task = asyncio.create_task(
+		db_analyze_loop(
+			con,
+			int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")),
+		)
+	)
 	yield
 	# cleanup
+	db_analyze_task.cancel()
+	try:
+		await db_analyze_task
+	except asyncio.CancelledError:
+		pass
+	con.pragma("optimize", 0x00002)
+	con.pragma("wal_checkpoint", "truncate")
 
 app = Litestar(
 	debug=os.getenv("DEBUG") == "1",
