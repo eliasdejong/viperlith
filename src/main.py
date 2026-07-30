@@ -8,6 +8,7 @@ from litestar.static_files import create_static_files_router
 import base64
 from contextlib import asynccontextmanager
 
+import src.util.migrate
 from src.util.db_write_con import con, db_analyze_loop
 from src.util.session_id import get_session_id
 from src.chat.router import router as chat_router
