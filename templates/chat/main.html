@@ -15,5 +15,45 @@
 			Default Channel
 		</button>
 	</div>
+	<div class="flex flex-col flex-grow">
+		{#
+		{% for i in con.execute("select * from channels") %}
+			<div class="color-white">{{ i[0] }}</div>
+			<div class="color-white">{{ i[1] }}</div>
+			<div class="color-white">{{ i[2] }}</div>
+		{% endfor %}
+		#}
 
+		<div class="flex flex-col flex-grow items-stretch">
+			oi m8
+		</div>
+
+		<hr class="text-slate-500">
+
+		<div class="p-2 flex justify-center items-center">
+			<textarea
+				type="text"
+				data-bind:message.content
+				data-on:keydown="evt.key == 'Enter' && !evt.shiftKey
+								? (
+									evt.preventDefault(),
+									el.value != '' ? (
+										@post('/chat/send-message', {
+											filterSignals: {include: /^message/}
+										})
+									) : null
+								) : null"
+				placeholder="Type your message..."
+				autocapitalize="off"
+				autocomplete="off"
+				autocorrect="off"
+				spellcheck="false"
+				class="h-32 w-full p-2 bg-slate-500
+						align-top 
+						rounded-md
+						focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:border-transparent transition duration-100
+						resize-none"
+			></textarea>
+		</div>
+	</div>
 </body>

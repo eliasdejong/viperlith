@@ -1,5 +1,3 @@
-import os
-import asyncio
 from collections.abc import AsyncGenerator
 from src.util.db_write_con import con
 from src.util.frame_ticks import frame_ticks

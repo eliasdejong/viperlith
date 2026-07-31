@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from litestar import Request
 
 
-async def get_session_id(request: Request) -> str:
+def get_session_id(request: Request) -> str:
 	try:
 		return str(UUID(request.session.get("id")))
 	except:
