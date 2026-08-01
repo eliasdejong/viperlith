@@ -5,7 +5,7 @@ from litestar.response import Response, Stream
 from litestar.response.base import ASGIResponse
 
 import msgspec
-from msgspec import defstruct
+from typing import Any
 
 from src.util.frame_ticks import frame_ticks
 from src.util.jinja import templates
@@ -17,7 +17,7 @@ from src.chat.types import *
 
 
 insert_user_arr = [] # (session_id,)
-send_msg_arr = [] # 
+send_msg_arr = [] # Message
 
 
 async def main_loop():
@@ -31,6 +31,16 @@ async def main_loop():
 			con.executemany("INSERT or ignore into users (session_id) values (?)", insert_user_arr)
 			insert_user_arr = []
 
+			con.executemany("""
+				INSERT into messages (channel_id, user_id, content)
+				values (
+					(select id from channels where ),
+					(select id from users where session_id = :session_id),
+					:content
+				)
+			""", send_msg_arr)
+			send_msg_arr = []
+
 
 
 def render(sid: str) -> str:
@@ -42,10 +52,7 @@ def render(sid: str) -> str:
 @get("/", sync_to_thread=False)
 def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 	t = templates.get_template("base.html")
-	html = t.render({
-		"body": render(sid),
-		"updates_url": "/chat/updates",
-	})
+	html = t.render(body=render(sid), updates_url="/chat/updates")
 	return Response(
 		content=html,
 		media_type="text/html",
@@ -63,22 +70,13 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 		}
 	)
 
-send_msg_decoder = msgspec.json.Decoder(
-	type=defstruct("message", [("message", Message)])
-)
+msg_decoder = msgspec.json.Decoder(type=MessageOuter)
 
 @post("/chat/send-message", sync_to_thread=False)
-def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: bytes) -> ASGIResponse:
-
-
-	# print(signals_json.decode(), flush=True)
-
-	decoded = send_msg_decoder.decode(signals_json)
-
-	print(type(decoded), flush=True)
-
-	# msgspec.to_builtins(msg)
-
+def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	msg = msg_decoder.decode(signals_json).message
+	msg.session_id = sid
+	send_msg_arr.append(msgspec.to_builtins(msg))
 	return ASGIResponse(status_code=204)
 
 router = Router(

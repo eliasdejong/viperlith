@@ -34,15 +34,16 @@
 			<textarea
 				type="text"
 				data-bind:message.content
-				data-on:keydown="evt.key == 'Enter' && !evt.shiftKey
-								? (
-									evt.preventDefault(),
-									el.value != '' ? (
-										@post('/chat/send-message', {
-											filterSignals: {include: /^message/}
-										})
-									) : null
-								) : null"
+				data-on:keydown="
+					evt.key == 'Enter' && !evt.shiftKey
+						? (
+							evt.preventDefault(),
+							el.value != '' ? (
+								@post('/chat/send-message', {
+									filterSignals: {include: /^message/}
+								})
+							) : null
+						) : null"
 				placeholder="Type your message..."
 				autocapitalize="off"
 				autocomplete="off"
@@ -51,7 +52,8 @@
 				class="h-32 w-full p-2 bg-slate-500
 						align-top 
 						rounded-md
-						focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:border-transparent transition duration-100
+						focus:outline-none focus:ring-2 focus:ring-cyan-100
+						focus:border-transparent transition duration-100
 						resize-none"
 			></textarea>
 		</div>

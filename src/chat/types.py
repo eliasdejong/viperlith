@@ -10,4 +10,7 @@ UnixName = Annotated[
 
 class Message(Struct):
 	content: Annotated[str, Meta(min_length=1, max_length=500)]
+	session_id: str | None = None
 
+class MessageOuter(Struct):
+	message: Message

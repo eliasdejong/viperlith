@@ -14,6 +14,7 @@ import src.util.migrate
 from src.util.db_write_con import con, db_analyze_loop
 from src.util.session_id import get_session_id
 from src.util.signals_json import signals_json
+
 from src.chat.router import router as chat_router
 from src.chat.router import main_loop as chat_main_loop
 
