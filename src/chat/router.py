@@ -1,3 +1,5 @@
+from typing import Any
+
 from litestar import Router, get, post
 from litestar.di import NamedDependency
 from litestar.connection import Request
@@ -5,11 +7,12 @@ from litestar.response import Response, Stream
 from litestar.response.base import ASGIResponse
 
 import msgspec
-from typing import Any
+import spsc_ring_threadsafe as srt
 
 from src.util.jinja import templates
 from src.util.db_read_con import con
 from src.util.sse_generator import sse_generator
+from src.util.mpsc_queue import Q
 
 from src.chat.types import *
 
@@ -32,7 +35,8 @@ def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
-	# insert_user_arr.append((sid,))
+	model = InsertUser(session_id=sid)
+	srt.put(Q.insert_user_q, msgpack_encoder.encode(model))
 	return Stream(
 		content=sse_generator(render, sid),
 		media_type="text/event-stream",
@@ -42,13 +46,11 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 		}
 	)
 
-msg_decoder = msgspec.json.Decoder(type=MessageOuter)
-
 @post("/chat/send-message", sync_to_thread=False)
 def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
-	# msg = msg_decoder.decode(signals_json).message
-	# msg.session_id = sid
-	# send_msg_arr.append(msgspec.to_builtins(msg))
+	model = send_msg_decoder.decode(signals_json).message
+	model.session_id = sid
+	srt.put(Q.send_msg_q, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
 router = Router(

@@ -12,22 +12,32 @@ def writer_tick():
 			list(drain(Q.insert_user_q))
 		)
 
-		# Set 'starcord' as the default channel
-		con.execute("""
-			UPDATE users
-			set current_channel_id = starcord_channel.id
-			from (select id from channels where name = 'starcord') as starcord_channel
-			where current_channel_id is NULL
-		""")
+		insert_user_list = list(drain(Q.insert_user_q))
+		if insert_user_list:
+			print(insert_user_list)
 
-		con.executemany("""
-			INSERT into messages (channel_id, user_id, content)
-			values (
-				(select current_channel_id from users where session_id = :session_id),
-				(select id from users where session_id = :session_id),
-				:content
-			)
-		""", list(drain(Q.send_msg_q)))
+
+		# # Set 'starcord' as the default channel
+		# con.execute("""
+		# 	UPDATE users
+		# 	set current_channel_id = starcord_channel.id
+		# 	from (select id from channels where name = 'starcord') as starcord_channel
+		# 	where current_channel_id is NULL
+		# """)
+
+		# con.executemany("""
+		# 	INSERT into messages (channel_id, user_id, content)
+		# 	values (
+		# 		(select current_channel_id from users where session_id = :session_id),
+		# 		(select id from users where session_id = :session_id),
+		# 		:content
+		# 	)
+		# """, list(drain(Q.send_msg_q)))
+
+		send_msg_list = list(drain(Q.send_msg_q))
+		if send_msg_list:
+			print(send_msg_list)
+
 
 def run_writer():
 	try:
@@ -43,7 +53,7 @@ def run_writer():
 		con.pragma("optimize", 0x00002)
 		con.pragma("wal_checkpoint", "truncate")
 		con.close()
-		sys.exit(1)
+		# sys.exit(1)
 
 if __name__ == "__main__":
-	run_writer()
+	run_writer()	

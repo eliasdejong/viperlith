@@ -2,6 +2,7 @@ import os, fcntl, mmap
 from collections import defaultdict
 from collections.abc import Generator
 
+import msgspec
 import spsc_ring_threadsafe as srt
 
 from src.config import WORKER_COUNT, QUEUE_SIZES
@@ -68,6 +69,6 @@ def drain(q_list: list[memoryview]) -> Generator[bytes, None, None]:
 	for ring in q_list:
 		while True:
 			try:
-				yield srt.get(ring)
+				yield msgspec.to_builtins(srt.get(ring))
 			except srt.QueueEmptyError:
 				break
