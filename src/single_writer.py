@@ -35,7 +35,7 @@ def run_writer():
 		frames = 0
 		for _ in frame_ticks():
 			writer_tick()
-			if frames % (4 * 3600 * int(os.getenv("FRAME_RATE"))) == 0: # every 4hrs
+			if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0: # every 4hrs
 				con.pragma("optimize")
 			frames += 1
 	except (KeyboardInterrupt, Exception) as e:
