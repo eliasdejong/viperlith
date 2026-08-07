@@ -5,21 +5,6 @@ from src.util.db_migration import run_migration
 from src.config import WORKER_COUNT, QUEUE_SIZES
 
 
-# def run_uvicorn():
-# 	if os.getenv("DEBUG") == "0":
-# 		uvicorn.run(
-# 			"src.web_worker:app",
-# 			host="0.0.0.0",
-# 			port=8000,
-# 			loop="uvloop",
-# 			workers=WORKER_COUNT,
-# 			log_level="warning",
-# 			access_log=False,
-# 			# ssl_keyfile="./ssl/key.pem",
-# 			# ssl_certfile="./ssl/cert.pem"
-# 		)
-# 	else:
-# 		uvicorn.run("src.web_worker:app", host="127.0.0.1", port=8000, loop="uvloop", log_level="debug", reload=True)
 
 def main():
 	mpsc.setup()
