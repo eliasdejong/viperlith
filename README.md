@@ -1,12 +1,12 @@
 # 🐍⚡🚀 Viperlith: the hypermedia based monolith for Python
 
 This is a small and opinionated full stack [Datastar](https://data-star.dev/) project template.
-Streaming hypermedia makes it possible to build rich interactive user experiences without requiring heavy SPA frontend frameworks, or writing even a single line of JavaScript, resulting in application that are faster and generally simpler to build and maintain.
+Streaming hypermedia makes it possible to build rich interactive user experiences without requiring heavy SPA frameworks, or writing even a single line of JavaScript, resulting in application that are faster and generally simpler to build and maintain.
 
 It consists of the following components:
 1. [Litestar ASGI framework](https://litestar.dev/): Uses up to [10x less memory as compared to FastAPI](https://github.com/kunesj/fastapi-litestar-memory-benchmark).
-2. [MsgSpec](https://msgspec.dev/): [Pydantic data validation](https://pydantic.dev/docs/validation/latest/get-started/) consumes a lot of memory. MsgSpec provides the same validation capabilities [with less memory](https://github.com/kunesj/fastapi-litestar-memory-benchmark) while being [an order of magnitude faster](https://msgspec.dev/benchmarks).
-3. SQLite through [APSW](https://github.com/rogerbinns/apsw): SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides more control, features and better error information compared to Python's builtin `sqlite3` module.
+2. [MsgSpec](https://msgspec.dev/): [Pydantic data validation](https://pydantic.dev/docs/validation/latest/get-started/) consumes a lot of memory. MsgSpec provides the same validation capabilities while being [an order of magnitude faster](https://msgspec.dev/benchmarks).
+3. SQLite through [APSW](https://github.com/rogerbinns/apsw): Local SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides better control, features and error handling compared to Python's builtin `sqlite3` module.
 4. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
 5. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
 6. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.

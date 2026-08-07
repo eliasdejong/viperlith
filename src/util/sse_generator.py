@@ -1,12 +1,12 @@
 from collections.abc import AsyncGenerator
-from src.util.db_write_con import con
-from src.util.frame_ticks import frame_ticks
+from src.util.db_read_con import con
+from src.util.frame_ticks import frame_ticks_async
 
 
 async def sse_generator(render: Callable[..., str], *args, **kwargs) -> AsyncGenerator[str, None]:
 	try:
 		prev_data_version = None
-		async for _ in frame_ticks():
+		async for _ in frame_ticks_async():
 			data_version = con.pragma("data_version")
 			if data_version == prev_data_version:
 				continue

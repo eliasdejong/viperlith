@@ -224,6 +224,7 @@ dependencies = [
     { name = "litestar", extra = ["brotli", "cryptography", "jinja"] },
     { name = "openai" },
     { name = "python-dotenv" },
+    { name = "spsc-ring-threadsafe" },
     { name = "uvicorn" },
     { name = "uvloop" },
 ]
@@ -239,6 +240,7 @@ requires-dist = [
     { name = "litestar", extras = ["brotli", "cryptography", "jinja"], specifier = ">=2.24.0" },
     { name = "openai", specifier = ">=2.46.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "spsc-ring-threadsafe", specifier = ">=0.0.9" },
     { name = "uvicorn", specifier = ">=0.49.0" },
     { name = "uvloop", specifier = ">=0.22.1" },
 ]
@@ -709,6 +711,14 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372, upload-time = "2024-02-25T23:20:04.057Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235, upload-time = "2024-02-25T23:20:01.196Z" },
+]
+
+[[package]]
+name = "spsc-ring-threadsafe"
+version = "0.0.9"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/6e/ac59595c5fcb7884382a4a8cd52ba0b38151295c7149cc9554386b2722e6/spsc_ring_threadsafe-0.0.9-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c7b032e5c68a99ac96621adacb31e8e3354f38c1e30543df53486e664998fa97", size = 18324, upload-time = "2026-07-27T10:27:40.864Z" },
 ]
 
 [[package]]

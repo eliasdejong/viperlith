@@ -1,65 +1,56 @@
-import os
-import asyncio
-from litestar import Litestar
-from litestar.config.compression import CompressionConfig
-from litestar.middleware.session.client_side import CookieBackendConfig
-from litestar.middleware.rate_limit import RateLimitConfig
-from litestar.static_files import create_static_files_router
-from litestar.di import Provide
-
-import base64
-from contextlib import asynccontextmanager
-
-import src.util.migrate
-from src.util.db_write_con import con, db_analyze_loop
-from src.util.session_id import get_session_id
-from src.util.signals_json import signals_json
-
-from src.chat.router import router as chat_router
-from src.chat.router import main_loop as chat_main_loop
+import os, sys, time, subprocess
+import uvicorn
+import src.util.mpsc_queue as mpsc
+from src.util.db_migration import run_migration
+from src.config import WORKER_COUNT, QUEUE_SIZES
 
 
-session_config = CookieBackendConfig(
-	secret=base64.b64decode(os.getenv("SESSION_KEY"))
-)
+# def run_uvicorn():
+# 	if os.getenv("DEBUG") == "0":
+# 		uvicorn.run(
+# 			"src.web_worker:app",
+# 			host="0.0.0.0",
+# 			port=8000,
+# 			loop="uvloop",
+# 			workers=WORKER_COUNT,
+# 			log_level="warning",
+# 			access_log=False,
+# 			# ssl_keyfile="./ssl/key.pem",
+# 			# ssl_certfile="./ssl/cert.pem"
+# 		)
+# 	else:
+# 		uvicorn.run("src.web_worker:app", host="127.0.0.1", port=8000, loop="uvloop", log_level="debug", reload=True)
 
-rate_limit_config = RateLimitConfig(rate_limit=("second", 5))
+def main():
+	mpsc.setup()
+	run_migration()
 
-@asynccontextmanager
-async def lifespan(app: Litestar):
-	# setup
-	tasks = [
-		asyncio.create_task(db_analyze_loop()),
-		asyncio.create_task(chat_main_loop()),
-	]
-	yield
-	# cleanup
-	for t in tasks:
-		t.cancel()
-	await asyncio.gather(*tasks, return_exceptions=True)
-	con.pragma("optimize", 0x00002)
-	con.pragma("wal_checkpoint", "truncate")
-	con.close()
+	writer = subprocess.Popen([sys.executable, "-m", "src.single_writer"], env=os.environ.copy())
+	
+	if os.getenv("DEBUG") == "0":
+		web = subprocess.Popen([
+			sys.executable, "-m", "uvicorn", "src.web_worker:app",
+			"--host", "0.0.0.0",
+			"--port", "8000",
+			"--loop", "uvloop",
+			"--log-level", "warning",
+			"--no-access-log",
+			"--workers", str(WORKER_COUNT)
+		], env=os.environ.copy())
+	else:
+		web = subprocess.Popen([
+			sys.executable, "-m", "uvicorn", "src.web_worker:app",
+			"--host", "127.0.0.1",
+			"--port", "8000",
+			"--loop", "uvloop",
+			"--log-level", "debug",
+			"--reload"
+		], env=os.environ.copy())
 
-app = Litestar(
-	debug=os.getenv("DEBUG") == "1",
-	route_handlers=[
-		chat_router,
-		create_static_files_router(path="/static", directories=["static"]),
-	],
-	lifespan=[lifespan],
-	middleware=[session_config.middleware, rate_limit_config.middleware],
-	compression_config=CompressionConfig(
-		backend="brotli",
-		minimum_size=500,
-		brotli_quality=3,
-		brotli_mode="text",
-		brotli_lgwin=21, # 2^21 = 2MB context window
-		brotli_lgblock=0,
-		brotli_gzip_fallback=True,
-	),
-	dependencies={
-		"sid": Provide(get_session_id, sync_to_thread=False),
-		"signals_json": Provide(signals_json),
-	},
-)
+	while writer.poll() is None and web.poll() is None:
+		time.sleep(1)
+
+	sys.exit(1)
+
+if __name__ == "__main__":
+	main()

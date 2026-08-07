@@ -18,9 +18,3 @@ con.pragma("journal_mode", "wal")
 con.pragma("journal_size_limit", 67108864) # ~64MiB; prevent WAL from growing unbounded
 con.pragma("synchronous", "normal") # set to "full" if you cannot afford to lose ~300ms of data on crash / power out
 con.pragma("optimize", 0x10002)
-
-
-async def db_analyze_loop():
-	while True:
-		await asyncio.sleep(int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600)
-		con.pragma("optimize")

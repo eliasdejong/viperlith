@@ -9,6 +9,7 @@ dependencies = [
     "litestar[brotli,cryptography,jinja]>=2.24.0",
     "openai>=2.46.0",
     "python-dotenv>=1.2.2",
+    "spsc-ring-threadsafe>=0.0.9",
     "uvicorn>=0.49.0",
     "uvloop>=0.22.1",
 ]
