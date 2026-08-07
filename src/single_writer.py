@@ -30,20 +30,20 @@ def writer_tick():
 		""", list(drain(Q.send_msg_q)))
 
 def run_writer():
-	mpsc.attach_all()
-	frames = 0
-	for _ in frame_ticks():
-		try:
+	try:
+		mpsc.attach_all()
+		frames = 0
+		for _ in frame_ticks():
 			writer_tick()
 			if frames % (4 * 3600 * int(os.getenv("FRAME_RATE"))) == 0: # every 4hrs
 				con.pragma("optimize")
 			frames += 1
-		except Exception as e:
-			print(f"Write transaction failed: {type(e).__name__}: {e}")
-			con.pragma("optimize", 0x00002)
-			con.pragma("wal_checkpoint", "truncate")
-			con.close()
-			sys.exit(1)
+	except (KeyboardInterrupt, Exception) as e:
+		print(f"{type(e).__name__}: {e}")
+		con.pragma("optimize", 0x00002)
+		con.pragma("wal_checkpoint", "truncate")
+		con.close()
+		sys.exit(1)
 
 if __name__ == "__main__":
 	run_writer()
