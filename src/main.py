@@ -32,8 +32,18 @@ def main():
 			"--reload"
 		], env=os.environ.copy())
 
-	while writer.poll() is None and web.poll() is None:
-		time.sleep(1)
+	try:
+		while writer.poll() is None and web.poll() is None:
+			time.sleep(1)
+	finally:
+		for p in (writer, web):
+			if p.poll() is None:
+				p.terminate()
+				try:
+					p.wait(timeout=5)
+				except subprocess.TimeoutExpired:
+					p.kill()
+					p.wait()
 
 	sys.exit(1)
 
