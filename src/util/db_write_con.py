@@ -1,5 +1,4 @@
 import os
-import asyncio
 import apsw
 import apsw.bestpractice
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
