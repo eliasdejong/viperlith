@@ -1,17 +1,16 @@
 import os, sys, time, subprocess
 import uvicorn
 import src.util.mpsc_queue as mpsc
-from src.util.db_migration import run_migration
-from src.config import WORKER_COUNT, QUEUE_SIZES
+
+from src.config import WORKER_COUNT
 
 
 
 def main():
 	mpsc.setup()
-	run_migration()
 
 	writer = subprocess.Popen([sys.executable, "-m", "src.single_writer"], env=os.environ.copy())
-	
+
 	if os.getenv("DEBUG") == "0":
 		web = subprocess.Popen([
 			sys.executable, "-m", "uvicorn", "src.web_worker:app",
