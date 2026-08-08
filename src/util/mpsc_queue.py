@@ -6,6 +6,7 @@ import msgspec
 import spsc_ring_threadsafe as srt
 
 from src.config import WORKER_COUNT, QUEUE_SIZES
+from src.util.msgpack_enc import msgpack_decoder
 
 
 class Q:
@@ -69,6 +70,6 @@ def drain(q_list: list[memoryview]) -> Generator[bytes, None, None]:
 	for ring in q_list:
 		while True:
 			try:
-				yield msgspec.to_builtins(srt.get(ring))
+				yield msgpack_decoder.decode(srt.get(ring))
 			except srt.QueueEmptyError:
 				break

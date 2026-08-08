@@ -13,6 +13,7 @@ from src.util.jinja import templates
 from src.util.db_read_con import con
 from src.util.sse_generator import sse_generator
 from src.util.mpsc_queue import Q
+from src.util.msgpack_enc import msgpack_encoder
 
 from src.chat.types import *
 

@@ -7,10 +7,11 @@ import src.util.mpsc_queue as mpsc
 
 def writer_tick():
 	with con:
-		con.executemany(
-			"INSERT or ignore into users (:session_id) values (?)",
-			list(drain(Q.insert_user_q))
-		)
+		pass
+		# con.executemany(
+		# 	"INSERT or ignore into users (:session_id) values (?)",
+		# 	list(drain(Q.insert_user_q))
+		# )
 
 		insert_user_list = list(drain(Q.insert_user_q))
 		if insert_user_list:
