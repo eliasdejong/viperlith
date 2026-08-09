@@ -37,7 +37,7 @@ def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 	model = InsertUser(session_id=sid)
-	srt.put(Q.insert_user_q, msgpack_encoder.encode(model))
+	srt.put(Q.insert_user, msgpack_encoder.encode(model))
 	return Stream(
 		content=sse_generator(render, sid),
 		media_type="text/event-stream",
@@ -51,7 +51,7 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
 	model = send_msg_decoder.decode(signals_json).message
 	model.session_id = sid
-	srt.put(Q.send_msg_q, msgpack_encoder.encode(model))
+	srt.put(Q.send_msg, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
 router = Router(

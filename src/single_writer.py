@@ -6,15 +6,16 @@ import src.util.mpsc_queue as mpsc
 from src.util.db_migration import run_migration
 
 
+
 def writer_tick():
 	with con:
 		pass
 		# con.executemany(
 		# 	"INSERT or ignore into users (:session_id) values (?)",
-		# 	list(drain(Q.insert_user_q))
+		# 	list(drain(Q.insert_user))
 		# )
 
-		insert_user_list = list(drain(Q.insert_user_q))
+		insert_user_list = list(drain(Q.insert_user))
 		if insert_user_list:
 			print(insert_user_list)
 
@@ -34,9 +35,9 @@ def writer_tick():
 		# 		(select id from users where session_id = :session_id),
 		# 		:content
 		# 	)
-		# """, list(drain(Q.send_msg_q)))
+		# """, list(drain(Q.send_msg)))
 
-		send_msg_list = list(drain(Q.send_msg_q))
+		send_msg_list = list(drain(Q.send_msg))
 		if send_msg_list:
 			print(send_msg_list)
 
