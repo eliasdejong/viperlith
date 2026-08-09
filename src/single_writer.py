@@ -57,7 +57,6 @@ def run_writer():
 		con.pragma("optimize", 0x00002)
 		con.pragma("wal_checkpoint", "truncate")
 		con.close()
-		# sys.exit(1)
 
 if __name__ == "__main__":
 	run_writer()	
