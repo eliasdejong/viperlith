@@ -50,7 +50,7 @@ def claim():
 		try:
 			fd = os.open(path, os.O_RDWR)
 			fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-			print(f"Worker claimed ring number {i}")
+			print(f"Worker claimed mapping number {i}")
 			break
 		except OSError:
 			if fd is not None:
