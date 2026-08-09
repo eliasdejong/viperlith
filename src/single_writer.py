@@ -1,4 +1,4 @@
-import os, sys
+import os
 from src.util.db_write_con import con
 from src.util.frame_ticks import frame_ticks
 from src.util.mpsc_queue import Q, drain
@@ -9,37 +9,27 @@ from src.util.db_migration import run_migration
 
 def writer_tick():
 	with con:
-		pass
-		# con.executemany(
-		# 	"INSERT or ignore into users (:session_id) values (?)",
-		# 	list(drain(Q.insert_user))
-		# )
+		con.executemany(
+			"INSERT or ignore into users (session_id) values (:session_id)",
+			drain(Q.insert_user)
+		)
 
-		insert_user_list = list(drain(Q.insert_user))
-		if insert_user_list:
-			print(insert_user_list)
+		# Set 'starcord' as the default channel
+		con.execute("""
+			UPDATE users
+			set current_channel_id = starcord_channel.id
+			from (select id from channels where name = 'starcord') as starcord_channel
+			where current_channel_id is NULL
+		""")
 
-
-		# # Set 'starcord' as the default channel
-		# con.execute("""
-		# 	UPDATE users
-		# 	set current_channel_id = starcord_channel.id
-		# 	from (select id from channels where name = 'starcord') as starcord_channel
-		# 	where current_channel_id is NULL
-		# """)
-
-		# con.executemany("""
-		# 	INSERT into messages (channel_id, user_id, content)
-		# 	values (
-		# 		(select current_channel_id from users where session_id = :session_id),
-		# 		(select id from users where session_id = :session_id),
-		# 		:content
-		# 	)
-		# """, list(drain(Q.send_msg)))
-
-		send_msg_list = list(drain(Q.send_msg))
-		if send_msg_list:
-			print(send_msg_list)
+		con.executemany("""
+			INSERT into messages (channel_id, user_id, content)
+			values (
+				(select current_channel_id from users where session_id = :session_id),
+				(select id from users where session_id = :session_id),
+				:content
+			)
+		""", drain(Q.send_msg))
 
 
 def run_writer():
