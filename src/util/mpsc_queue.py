@@ -1,4 +1,4 @@
-import os, fcntl, mmap
+import os, fcntl, mmap, glob
 from collections import defaultdict
 from collections.abc import Generator
 
@@ -14,13 +14,13 @@ class Q:
 
 
 def setup():
-	q_dict = defaultdict(list)
-	for i in range(WORKER_COUNT):
-		path = os.getenv("SHM_PATH_PREFIX") + str(i)
+	for path in glob.glob(os.getenv("SHM_PATH_PREFIX") + "*"):
 		try:
-			os.unlink(path)	# clear any previous allocations
+			os.remove(path)	# clear any previous mappings
 		except FileNotFoundError:
 			pass
+	for i in range(WORKER_COUNT):
+		path = os.getenv("SHM_PATH_PREFIX") + str(i)
 		shm_size = sum(QUEUE_SIZES.values())
 		fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
 		os.ftruncate(fd, shm_size)
@@ -50,7 +50,7 @@ def claim():
 		try:
 			fd = os.open(path, os.O_RDWR)
 			fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-			print(f"Worker claimed ring number {i}", flush=True)
+			print(f"Worker claimed ring number {i}")
 			break
 		except OSError:
 			if fd is not None:

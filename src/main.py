@@ -35,7 +35,7 @@ def main():
 		while writer.poll() is None and web.poll() is None:
 			time.sleep(1)
 	finally:
-		for p in (writer, web):
+		for p in (web, writer):
 			if p.poll() is None:
 				p.terminate()
 				try:

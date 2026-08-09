@@ -42,11 +42,10 @@ def run_writer():
 			if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0: # every 4hrs
 				con.pragma("optimize")
 			frames += 1
-	except (KeyboardInterrupt, Exception) as e:
-		print(f"{type(e).__name__}: {e}")
+	finally:
 		con.pragma("optimize", 0x00002)
 		con.pragma("wal_checkpoint", "truncate")
 		con.close()
 
 if __name__ == "__main__":
-	run_writer()	
+	run_writer()
