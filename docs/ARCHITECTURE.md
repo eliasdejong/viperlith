@@ -18,6 +18,8 @@ The [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a grea
 - **SSE**: Server-Sent Events
 - **SSR**: Server-Side Rendering
 - **templating engine**: Tool for dynamically building string output, used to 'render' HTML responses
+- **CQRS**: Command Query Responsibility Segregation
+- **ACID**: Atomicity, Consistency, Isolation & Durability
 
 
 ## Brief history of the web
@@ -105,7 +107,7 @@ Practically, this means we no longer have to care about partial rendering or dif
 ### Practically Cheating: Brotli Compression
 One of the reputes against sending full-page replacements over the network is: "But what about bandwidth?".
 
-Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
+Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server-Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
 
 An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary when the content arrives.
 
@@ -157,7 +159,7 @@ First of all:
 ### What are Server-Sent Events?
 To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
 
-The full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
+For the full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
 
 Short answer: SSE is an HTTP response type: `text/event-stream`. Other HTTP response types include `text/html`, `application/json` and `multipart/form-data`. Those are for HTML, JSON and form data respectively.
 
@@ -193,3 +195,111 @@ Because it does not synergize well with native browser functionality. Applicatio
 HTTP traffic also has the benefit of appearing more "normal" and thus has a lower chance of getting intercepted by some corporate firewalls.
 
 In practice, **web sockets are a dead-end**.
+
+
+## Web Server Architecture
+### Simple Web Server + Database
+A simple web server + database might look like this:
+```
+                                           
+        Simple Web Server + Database       
+                                           
+              ┌─────────────┐              
+              │  Web Server │              
+              │             │              
+              └──────┬──────┘              
+                     │                     
+                     │Read/Write           
+                     │                     
+   ┌─────────────────┴─────────────────┐   
+   │                                   │   
+   │         Postgres or MySQL         │   
+   │                                   │   
+   └───────────────────────────────────┘   
+                                           
+```
+All is well, but if we have many users, traffic increases and our web server running on a single thread could get overloaded, especially if it is written in a scripting language such as Python or JavaScript.
+
+### Web Workers + Database Architecture
+To solve this, many web servers provide an option to run multiple workers, which will spawn either threads or processes to run in parallel:
+```
+                                                           
+          Web Workers + Database Architecture              
+                                                           
+   ┌───────────────────────────────────────────────────┐   
+   │                uvicorn --workers N                │   
+   │                                                   │   
+   │ ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │   
+   │ │  Web Worker │  │  Web Worker │  │  Web Worker │ │   
+   │ │      1      │  │      2      │  │      N      │ │   
+   │ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ │   
+   └────────│────────────────│────────────────│────────┘   
+            │                │                │            
+            │Read/Write      │Read/Write      │Read/Write  
+            │                │                │            
+   ┌────────┴────────────────┴────────────────┴────────┐   
+   │                                                   │   
+   │                 Postgres or MySQL                 │   
+   │                                                   │   
+   └───────────────────────────────────────────────────┘   
+                                                           
+```
+Each worker is stateless and receives a separate read/write connection to the database.
+
+Great! We scaled web workers across the machine's core count.
+
+However, we have now acquired a new bottleneck: **The database**.
+
+Notice how each web worker has its own read/write connection to the database? Each worker is competing to schedule transactions on the database. And because each transaction could be reading and writing to & from the same rows, the database has to coordinate this in an orderly fashion while maintaining **ACID**.
+
+In particular:
+- What happens if two workers try to edit the same row simultaneously?
+- When do a worker's writes become visible to other workers?
+
+The database 
+
+
+### CQRS Architecture
+In CQRS, reads are separated from writes.
+
+Web workers handling requests are themselves not allowed to write to the database. Instead, a standalone 'single-writer' process has exclusive write access:
+```
+                                                                                        
+                               Viperlith CQRS Architecture                              
+                                                                                        
+   ┌───────────────────────┐    ┌───────────────────────────────────────────────────┐   
+   │ Single-writer Process │    │                uvicorn --workers N                │   
+   │ ┌─────────────────────┴────┴─────────────────────────────────────────────────┐ │   
+   │ │                               MPSC command queue                           │ │   
+   │ │                               (shared memory)                              │ │   
+   │ └─────────┼───────────┬────┬───────────▲────────────────▲────────────────▲───┘ │   
+   │  ┌────────▼─────────┐ │    │ ┌─────────┼───┐  ┌─────────┼───┐  ┌─────────┼───┐ │   
+   │  │  Business Logic  │ │    │ │  Web Worker │  │  Web Worker │  │  Web Worker │ │   
+   │  └────────┬─────────┘ │    │ │      1      │  │      2      │  │      N      │ │   
+   │           │           │    │ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ │   
+   └───────────│───────────┘    └────────│────────────────│────────────────│────────┘   
+               │                         │                │                │            
+               │Read/Write               │Read            │Read            │Read        
+               │                         │                │                │            
+   ┌───────────┴─────────────────────────┴────────────────┴────────────────┴────────┐   
+   │                                                                                │   
+   │                            SQLite (mmap + WAL mode)                            │   
+   │                                                                                │   
+   └────────────────────────────────────────────────────────────────────────────────┘   
+                                                                                        
+```
+If a client request needs to affect a write to the database, the worker will place a command into the queue for the single-writer.
+
+This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered in practice. Because workers can read from the same `mmap` cache, reads scale horizontally with core count. Writes are batched for maximum throughput using nested transactions (`SAVEPOINT`) while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed interval.
+
+A typical interaction cycle goes like this:
+1. User performs an action inside the UI
+2. Fetch request is fired to an action endpoint (e.g. `/click-button`)
+3. Web worker receives the request, validates its format and places a command in the MPSC queue
+4. Single-writer takes the command from the queue
+5. Single-writer applies business logic
+6. Single-writer commits a write-transaction to the database
+7. The write becomes visible to all workers
+8. The worker holding the SSE stream to the client re-renders the page, based on the new database state
+9. Client receives the new page and Datastar morphs it into their local DOM
+10. Client sees the updated page
