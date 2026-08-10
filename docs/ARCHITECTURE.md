@@ -58,14 +58,38 @@ Of course, not all client-side state can be eliminated. Some of it is necessary,
 The result of eliminating client-side state is that the browser becomes a "dumb" viewport or terminal, capable only of displaying HTML.
 
 ### Obsoleting of the Virtual DOM
-In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating table data, because browsers at the time struggled with this, especially on low-end client hardware.
+In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating of table data, because browsers at the time struggled with this, especially on low-end client hardware.
 
 However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware has become more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript.
 
 Consider that many of the most performance-sensitive routines (parsing HTML, layout engine, font sizing, etc.) are highly optimized over decades of engineering, and are written in native languages such as C++, compiled for the target hardware. Meanwhile, JavaScript is a scripting language which runs in a background JIT compiler that demands high memory and startup times. The single-threaded model of JavaScript where the rendering blocks the main thread and vice-versa has also aged especially poorly into the multi-core era. Meanwhile, the browser is able leverage multithreading to parallelize much of this work.
 
 ### The Full Picture
-Having the ability to render any HTML through templates, what do we need state on the client for? We can keep all state in the backend and simply send down the declarative HTML for what the client is supposed to see at any given moment. This drastically simplifies the picture on the client:
+```
+                                                                  
+                Datastar Client-Server Endpoints                  
+                                                                  
+   ┌──────────────────────────────────────────────────────┐       
+   │                                                      │       
+   │                 Web Server + database                │       
+   │                                                      │       
+   └──────────────┬───────────────────────────────────────┘       
+             ▲    │                 ▲               ▲             
+             │    │                 │               │             
+             │    │                 │               │             
+    GET      │    │ HTTP SSE        │POST           │POST         
+    /updates │    │ response        │/button-click  │/form-submit 
+             │    │ (kept open)     │               │             
+             │    │                 │               │             
+             │    ▼                 │               │             
+   ┌─────────┴──────────────────────┴───────────────┴─────┐       
+   │                                                      │       
+   │                     Client browser                   │       
+   │                                                      │       
+   └──────────────────────────────────────────────────────┘       
+                                                                  
+```
+Having the ability to render any HTML through templates, what do we need state on the client for? We can keep all state in the backend and simply send down the declarative HTML for what the client is supposed to see at any given moment over SSE. This drastically simplifies the picture on the client:
 
 <img src="images/react_state_mgmt.webp" alt="React state management" width="800">
 
@@ -80,9 +104,10 @@ Practically, this means we no longer have to care about partial rendering or dif
 
 ### Practically Cheating: Brotli Compression
 One of the reputes against sending full-page replacements over the network is: "But what about bandwidth?".
+
 Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
 
-An HTTP SSE response is kept open and we keep streaming HTML over it to the client. Even continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary.
+An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary when the content arrives.
 
 ### Relying on HTML for UI components
 Relying on HTML extends not only to DOM updates, but also to UI components. HTML5 has acquired many native features such as datetime pickers, dialogs and more. We can simply use this instead of building our own. Some examples of UI component libraries that do this are [BasecoatUI](https://basecoatui.com/), [KelpUI](https://kelpui.com/) and [DaisyUI](https://daisyui.com/).
@@ -105,6 +130,7 @@ Because hypermedia-driven applications (HDA) are just sending HTML, a number of 
 - dependency arrays
 - prop drilling
 - React compiler
+- Immer
 - vdom
 - React context
 
