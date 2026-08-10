@@ -112,7 +112,7 @@ Brotli is a compression algorithm similar to GZip or ZStandard, which is availab
 An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary when the content arrives.
 
 ### Relying on HTML for UI components
-Relying on HTML extends not only to DOM updates, but also to UI components. HTML5 has acquired many native features such as datetime pickers, dialogs and more. We can simply use this instead of building our own. Some examples of UI component libraries that do this are [BasecoatUI](https://basecoatui.com/), [KelpUI](https://kelpui.com/) and [DaisyUI](https://daisyui.com/).
+Relying on HTML extends not only to DOM updates, but also to UI components. HTML5 has acquired many native features such as datetime pickers, dialogs and more. We can use this instead of building our own. Some examples of UI component libraries that do this are [BasecoatUI](https://basecoatui.com/), [KelpUI](https://kelpui.com/) and [DaisyUI](https://daisyui.com/).
 
 
 ## Obsolete concepts
@@ -183,10 +183,10 @@ SSE is NOT connection type, as it is **just HTTP** ([watch the video](https://ww
 
 Another misconception: SSE is *always persistent*.
 
-An SSE response can use HTTP/1.1 [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or data streaming mechanisms in HTTP/2 to keep sending data **as long as the server wants**. This means it can send one chunk, or multiple. The server is in control of when the response ends.
+An SSE response can keep contain one chunk, or multiple. The server can keep sending data as long as it wants, as it is in control of when the response ends.
 
 ### So Why use SSE?
-Because it places **the server** in control of when to send data (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli compression.
+Because it places **the server** in control of when data is sent (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli compression.
 
 
 ## Why not web sockets?
@@ -264,7 +264,7 @@ Counter to popular belief, Postgres is **not ACID by default**. The default isol
 
 > "applications using this level must be prepared to retry transactions due to serialization failures"
 
-The story for MySQL is also not much better, with [the default isolation level of 'repeatable read'](https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html) still allowing for serialization anomalies. Again, a 'serializable' level is available, however not without performance implications:
+The story for MySQL is also not much better, with the default isolation level of 'repeatable read' [still allowing for serialization anomalies](https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html). Again, a 'serializable' level is available, however not without performance implications:
 
 > InnoDB implicitly converts all plain SELECT statements to SELECT ... FOR SHARE
 
@@ -341,7 +341,7 @@ A typical interaction cycle goes like this:
 
 We now have obtained the following features:
 1. Writes never block or run into locks
-2. Readers and writers don't block eachother (ensured by WAL mode)
+2. Readers and writer don't block eachother (ensured by WAL mode)
 3. Readers scale horizontally with core count
 4. No cache duplication / Readers read from the same page cache (ensured by mmap)
 5. Batching unlocks further increased write throughput
