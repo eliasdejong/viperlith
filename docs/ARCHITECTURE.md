@@ -8,20 +8,20 @@ The [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a grea
 
 
 ## Terminology
-- HTML: HyperText Markup Language
-- HDA: Hypermedia-Driven Applications
-- REST: REpresentational State Transfer
-- SPA: Single-Page Application
-- MPA: Multi-Page Application
-- DOM: Document Object Model (representation used internally by the browser to represent web pages)
-- morph: efficiently merging a fragment of HTML into the DOM
-- SSE: Server-Sent Events
-- SSR: Server-Side Rendering
-- templating engine: Tool for dynamically building string output, used to 'render' HTML responses.
+- **HTML**: HyperText Markup Language
+- **HDA**: Hypermedia-Driven Applications
+- **REST**: REpresentational State Transfer
+- **SPA**: Single-Page Application
+- **MPA**: Multi-Page Application
+- **DOM**: Document Object Model (representation used internally by the browser to represent web pages)
+- **morph**: merging a fragment of HTML into the DOM
+- **SSE**: Server-Sent Events
+- **SSR**: Server-Side Rendering
+- **templating engine**: Tool for dynamically building string output, used to 'render' HTML responses
 
 
 ## Brief history of the web
-- **1991-2000 The Early Web**: Static HTML, `cgi-bin`, Perl scripts, FastCGI
+- **1991-2000 The Early Web**: Static HTML, cgi-bin, Perl scripts, FastCGI
 - **2000-2006 The Dynamic Web**: PHP, ASP, JSP, LAMP-stack, CMSs (Wordpress, Drupal), Flash
 - **2006-2010 The Ajax Era**: jQuery, Backbone.js, AJAX
 - **2010-2015 The Frameworks Arrive**:  AngularJS, Ember, React, Vue, Ruby on Rails, Node.js
@@ -30,7 +30,7 @@ The [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a grea
 - **2024-today The Pendulum Swings Back**: htmx, Alpine.js, Datastar, Rails Turbo/Hotwire, Server-rendered components
 
 Notice the circle:
-`server-rendered HTML → thick clients → back to server-rendered HTML`
+server-rendered HTML → thick clients → back to server-rendered HTML
 
 
 ## Core philosophy
@@ -46,26 +46,57 @@ For hypermedia-driven applications:
 - `f()`: is a rendering function which takes in the server state (DB) and outputs an HTML string. On the backend, this is done by combining SQL queries with a templating engine such as Jinja in Python or Templ in Go.
 
 
-## Client-side state management
-One of the more complex unsolved problems in the SPA world is client-side state management. Many solutions exists (Redux, Zustand, React Router).
+## Just use HTML
+<img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="1350">
+
+### Client-side state management
+One of the more complex ongoing problems in the SPA world is client-side state management. Many solutions exists (Redux, Zustand, React Router).
 Hypermedia-driven applications deal with this problem cleverly: **by eliminating client-side state** (and moving it to the backend).
 
-Of course, not all client-side state can be eliminated. Some of it is necessary, such as user inputs, scroll position etc. Also, some state is considered *trivial*, meaning it does not affect anything meaningful. For example, whether dark mode is enabled or whether a dropdown menu is opened usually are purely client-side visual artifacts that do not concern the server.
+Of course, not all client-side state can be eliminated. Some of it is necessary, such as user inputs, scroll position etc. Also, some state is considered *trivial*, meaning it does not affect anything meaningful. For example, whether dark mode is enabled or whether a dropdown menu is opened are mostly client-side visual artifacts that do not concern the server.
 
 The result of eliminating client-side state is that the browser becomes a "dumb" viewport or terminal, capable only of displaying HTML.
 
-In the React world, the "virtual DOM" or "vdom"'s orginal purpose was to support fast dynamic page updates that the browser itself struggled with, such as real-time updating table data. However, a lot has changed since 2013 and browsers have become a lot more capable. 
+### Obsoleting of the Virtual DOM
+In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating table data, because browsers at the time struggled with this, especially on low-end client hardware.
+
+However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware has become more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript.
+
+Consider that many of the most performance-sensitive routines (parsing HTML, layout engine, font sizing, etc.) are highly optimized over decades of engineering, and are written in native languages such as C++, compiled for the target hardware. Meanwhile, JavaScript is a scripting language which runs in a background JIT compiler that demands high memory and startup times. The single-threaded model of JavaScript where the rendering blocks the main thread and vice-versa has also aged especially poorly into the multi-core era. Meanwhile, the browser is able leverage multithreading to parallelize much of this work.
+
+### The Full Picture
+Having the ability to render any HTML through templates, what do we need state on the client for? We can keep all state in the backend and simply send down the declarative HTML for what the client is supposed to see at any given moment. This drastically simplifies the picture on the client:
 
 <img src="images/react_state_mgmt.webp" alt="React state management" width="800">
 
+Relying on the browser for most functionality is not only viable, but in fact faster and more reliable than trying to recreate everything in JavaScript for the same result.
+
+### The Magic Sauce: Idiomorph
+[Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm, and Datastar uses its own adapted implementation.
+
+This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
+
+Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. We can send the **entire page** at once (known as a "fat morph"), and the algorithm will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
+
+### Practically Cheating: Brotli Compression
+One of the reputes against sending full-page replacements over the network is: "But what about bandwidth?".
+Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
+
+An HTTP SSE response is kept open and we keep streaming HTML over it to the client. Even continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary.
+
+### Relying on HTML for UI components
+Relying on HTML extends not only to DOM updates, but also to UI components. HTML5 has acquired many native features such as datetime pickers, dialogs and more. We can simply use this instead of building our own. Some examples of UI component libraries that do this are [BasecoatUI](https://basecoatui.com/), [KelpUI](https://kelpui.com/) and [DaisyUI](https://daisyui.com/).
+
 
 ## Obsolete concepts
-Because hypermedia-driven applications (HDA) are just sending HTML, a number of concepts common in the frontend industry become obsolete. Meaning they cease to exist as something a developer needs to think about:
+Because hypermedia-driven applications (HDA) are just sending HTML, a number of concepts common in the frontend industry become obsolete. Meaning they **cease to exist** as something a developer needs to think about:
+
 ### Build concepts
 - babel translation
 - tree shaking
 - bundling
 - code splitting
+
 ### React concepts
 - client-side routing
 - suspense
@@ -76,11 +107,11 @@ Because hypermedia-driven applications (HDA) are just sending HTML, a number of 
 - React compiler
 - vdom
 - React context
+
 ### Rendering concepts
 - (selective/partial/progressive) hydration
 - use client/server
 - (incremental/deferred) static regeneration
-
 
 
 ## Datastar vs HTMX
