@@ -183,7 +183,7 @@ SSE is NOT connection type, as it is **just HTTP** ([watch the video](https://ww
 
 Another misconception: SSE is *always persistent*.
 
-An SSE response can use HTTP/1.1 [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or data streaming mechanisms in HTTP/2 to keep sending data **as long as the server wants**. This means it can send one chunk, or multiple, or close immediately. The server is in control of when the response ends.
+An SSE response can use HTTP/1.1 [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or data streaming mechanisms in HTTP/2 to keep sending data **as long as the server wants**. This means it can send one chunk, or multiple. The server is in control of when the response ends.
 
 ### So Why use SSE?
 Because it places **the server** in control of when to send data (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli compression.
@@ -297,9 +297,9 @@ In CQRS, database reads are separated from writes.
 
 We will make a big change: web workers are themselves not allowed to write to the database. Instead, their connections are **read-only** and a separate 'single-writer' process holds **exclusive write access**. If a worker needs to affect a write to the database, it will place a command into the queue for the single-writer.
 
-A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves ** DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
+A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves **DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
 
-This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers can read from the same `mmap` cache, reads scale horizontally with core count. Writes are batched for maximum throughput while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed frame rate / interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
+This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes are batched for maximum throughput while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed frame rate / interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
 However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2].
 ```
