@@ -47,7 +47,7 @@ For hypermedia-driven applications:
 
 
 ## Just use HTML
-<img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="1350">
+<img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="675">
 
 ### Client-side state management
 One of the more complex ongoing problems in the SPA world is client-side state management. Many solutions exists (Redux, Zustand, React Router).
