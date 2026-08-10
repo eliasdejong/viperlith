@@ -250,19 +250,58 @@ Great! We scaled web workers across the machine's core count.
 
 However, we have now acquired a new bottleneck: **The database**.
 
-Notice how each web worker has its own read/write connection to the database? Each worker is competing to schedule transactions on the database. And because each transaction could be reading and writing to & from the same rows, the database has to coordinate this in an orderly fashion while maintaining **ACID**.
+Notice how each web worker has its own read/write connection to the database? Each worker is competing to schedule transactions. And because each transaction could be reading and writing to/from the same rows, the database has to coordinate this in an orderly fashion while maintaining **ACID**.
 
 In particular:
 - What happens if two workers try to edit the same row simultaneously?
 - When do a worker's writes become visible to other workers?
 
-The database 
+The database has to ensure that each query sees a consistent, isolated view of the data, while making sure that changes are atomic.
+
+From the user's perspective, it "just works" and the database seems to handle it fine. However, maintaining strong ACID guarantees does not come for free. Most databases hold **locks** when a particular piece of data is being modified. While the lock is held, **no other query can modify the same data protected by the lock**. This locking can lead to **contention** and performance problems under load.
+
+Counter to popular belief, Postgres is **not ACID by default**. The default isolation level in Postgres 'read committed', which [allows for serialization anomalies, phantom reads and nonrepeatable reads](https://www.postgresql.org/docs/current/transaction-iso.html). To solve this problem, the isolation level must be set to 'serializable', however the documentation warns that:
+
+> "applications using this level must be prepared to retry transactions due to serialization failures"
+
+The story for MySQL is also not much better, with [the default isolation level of 'repeatable read'](https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html) still allowing for serialization anomalies. Again, a 'serializable' level is available, however not without performance implications:
+
+> InnoDB implicitly converts all plain SELECT statements to SELECT ... FOR SHARE
+
+>  SELECT ... FOR SHARE
+> Sets a shared mode lock on any rows that are read. Other sessions can read the rows, but cannot modify them until your transaction commits. If any of these rows were changed by another transaction that has not yet committed, your query waits until that transaction ends and then uses the latest values.
+
+So while we can use multiple web workers, unless we are willing to compromise on ACID, we do not get the same scaling out of the database, as our concurrent transactions will be waiting to acquire locks.
+
+What can we do about this?
+
+
+### Switching to SQLite
+First, we will switch our database to SQLite. An out-of-process databases such as Postgres has unnecessary overhead, such as:
+- Running in a standalone process
+- Localhost networking protocol + serialization
+- Binary size
+- Connection pooling
+- Poor MVCC implementation[^1]
+- File format portability
+- If remote: TCP/IP + SSL/TLS
+- Startup time
+
+However, this will not actually solve the concurrency problem. If we simply copy the previous architecture, we will run into the infamous `SQLITE_BUSY` error.
+
+So what to do?
 
 
 ### CQRS Architecture
-In CQRS, reads are separated from writes.
+In CQRS, database reads are separated from writes.
 
-Web workers handling requests are themselves not allowed to write to the database. Instead, a standalone 'single-writer' process has exclusive write access:
+We will make a big change: web workers are themselves not allowed to write to the database. Instead, their connections are **read-only** and a separate 'single-writer' process holds **exclusive write access**. If a worker needs to affect a write to the database, it will place a command into the queue for the single-writer.
+
+A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves ** DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
+
+This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers can read from the same `mmap` cache, reads scale horizontally with core count. Writes are batched for maximum throughput while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed frame rate / interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
+
+However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2].
 ```
                                                                                         
                                Viperlith CQRS Architecture                              
@@ -288,10 +327,6 @@ Web workers handling requests are themselves not allowed to write to the databas
    └────────────────────────────────────────────────────────────────────────────────┘   
                                                                                         
 ```
-If a client request needs to affect a write to the database, the worker will place a command into the queue for the single-writer.
-
-This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered in practice. Because workers can read from the same `mmap` cache, reads scale horizontally with core count. Writes are batched for maximum throughput using nested transactions (`SAVEPOINT`) while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed interval.
-
 A typical interaction cycle goes like this:
 1. User performs an action inside the UI
 2. Fetch request is fired to an action endpoint (e.g. `/click-button`)
@@ -303,3 +338,16 @@ A typical interaction cycle goes like this:
 8. The worker holding the SSE stream to the client re-renders the page, based on the new database state
 9. Client receives the new page and Datastar morphs it into their local DOM
 10. Client sees the updated page
+
+We now have obtained the following features:
+1. Writes never block or run into locks
+2. Readers and writers don't block eachother (ensured by WAL mode)
+3. Readers scale horizontally with core count
+4. No cache duplication / Readers read from the same page cache (ensured by mmap)
+5. Batching unlocks further increased write throughput
+
+Alas, we can increase worker count without running into concurrency problems!
+
+
+[^1]: Postgres' MVCC implementation [has aged quite poorly](https://www.cs.cmu.edu/~pavlo/blog/2023/04/the-part-of-postgresql-we-hate-the-most.html). Long-running transactions can block the autovacuum process, which leaves behind more dead tuples, which in turn slow down transactions in a vicious cycle until the database halts to a crawl.
+[^2]: Shared memory [is the fastest way of communicating between processes](https://chengxin.de/2021/ipc/).
