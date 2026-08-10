@@ -56,7 +56,7 @@ The result of eliminating client-side state is that the browser becomes a "dumb"
 
 In the React world, the "virtual DOM" or "vdom"'s orginal purpose was to support fast dynamic page updates that the browser itself struggled with, such as real-time updating table data. However, a lot has changed since 2013 and browsers have become a lot more capable. 
 
-![React state management](images/react_state_mgmt.webp)
+<img src="images/react_state_mgmt.webp" alt="React state management" width="800">
 
 
 ## Obsolete concepts
