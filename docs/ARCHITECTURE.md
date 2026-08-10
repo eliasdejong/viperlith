@@ -170,9 +170,9 @@ Answer:
 event: datastar-patch-elements
 data: selector body
 data: mode outer
-data: elements <div>
+data: elements <body>
 data: elements		<button>Click me</button>
-data: elements </div>
+data: elements </body>
 
 
 ```
@@ -301,7 +301,7 @@ A "command" in this case means an "event to be processed by the single-writer". 
 
 This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes are batched for maximum throughput while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed frame rate / interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
-However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2].
+However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2]:
 ```
                                                                                         
                                Viperlith CQRS Architecture                              
@@ -330,7 +330,7 @@ However, since each worker lives inside its own process, by default, they have n
 A typical interaction cycle goes like this:
 1. User performs an action inside the UI
 2. Fetch request is fired to an action endpoint (e.g. `/click-button`)
-3. Web worker receives the request, validates its format and places a command in the MPSC queue
+3. Web worker receives the request, validates its format and places a command in the queue
 4. Single-writer takes the command from the queue
 5. Single-writer applies business logic
 6. Single-writer commits a write-transaction to the database
