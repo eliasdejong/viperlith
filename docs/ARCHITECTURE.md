@@ -67,7 +67,7 @@ Consider that many of the most performance-sensitive routines (parsing HTML, lay
 ### The Full Picture
 ```
                                                                   
-                Datastar Client-Server Endpoints                  
+                    Datastar Server Endpoints                     
                                                                   
    ┌──────────────────────────────────────────────────────┐       
    │                                                      │       
@@ -93,14 +93,14 @@ Having the ability to render any HTML through templates, what do we need state o
 
 <img src="images/react_state_mgmt.webp" alt="React state management" width="800">
 
-Relying on the browser for most functionality is not only viable, but in fact faster and more reliable than trying to recreate everything in JavaScript for the same result.
+Relying on the browser for most functionality is not only viable, but in fact faster and more reliable than trying to recreate everything in JavaScript.
 
 ### The Magic Sauce: Idiomorph
 [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm, and Datastar uses its own adapted implementation.
 
 This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
 
-Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. We can send the **entire page** at once (known as a "fat morph"), and the algorithm will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
+Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. The server can send the **entire page** at once (known as a "fat morph"), and the algorithm on the client will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
 
 ### Practically Cheating: Brotli Compression
 One of the reputes against sending full-page replacements over the network is: "But what about bandwidth?".
@@ -153,13 +153,43 @@ Datastar does not enfore any particular model, meaning it is possible to build a
 
 
 ## Why Server-Sent Events?
+First of all:
+### What are Server-Sent Events?
 To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
 
+The full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
 
+Short answer: SSE is an HTTP response type: `text/event-stream`. Other HTTP response types include `text/html`, `application/json` and `multipart/form-data`. Those are for HTML, JSON and form data respectively.
+
+So what does the body of an SSE response look like?
+
+Answer:
+```
+event: datastar-patch-elements
+data: selector body
+data: mode outer
+data: elements <div>
+data: elements		<button>Click me</button>
+data: elements </div>
+
+
+```
+It is mostly just text. But notice the particular format with `event:`, `data:` and the two trailing endlines `\n\n`? That is part of the SSE response format.
+
+### What SSE is NOT
+SSE is NOT connection type, as it is **just HTTP** ([watch the video](https://www.youtube.com/watch?v=xq1dVQ-isb4)).
+
+Another misconception: SSE is *always persistent*.
+
+An SSE response can use HTTP/1.1 [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or data streaming mechanisms in HTTP/2 to keep sending data **as long as the server wants**. This means it can send one chunk, or multiple, or close immediately. The server is in control of when the response ends.
+
+### So Why use SSE?
+Because it places **the server** in control of when to send data (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli compression.
 
 
 ## Why not web sockets?
-
-
+Because it does not synergize well with native browser functionality. Applications must handle stateful connections, reconnecting, and compression on the main thread in JavaScript. For HTTP, all of those are handled natively by the browser (in C++ background threads).
 
 HTTP traffic also has the benefit of appearing more "normal" and thus has a lower chance of getting intercepted by some corporate firewalls.
+
+In practice, **web sockets are a dead-end**.
