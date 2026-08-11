@@ -22,7 +22,7 @@
 							border-2 border-slate-500
 							hover:cursor-pointer
 							rounded-md">
-				{{ i[0] | escape }}
+				{{ i[0] }}
 			</button>
 		{% endfor %}
 	</div>
@@ -58,13 +58,13 @@
 			) %}
 				<div class="m-1.5 text-white">
 					<p class="text-slate-500">
-						{{ i[0] | escape }}
+						{{ i[0] }}
 						<span
 							data-text="(new Date({{ i[2] * 1000 }})).toLocaleString()"
 							class="text-slate-700 text-xs"
 						></span>
 					</p>
-					<p class="break-all">{{ i[1] | escape }}</p>
+					<p class="break-all">{{ i[1] }}</p>
 				</div>
 			{% endfor %}
 		</div>

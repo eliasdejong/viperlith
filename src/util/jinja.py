@@ -1,5 +1,5 @@
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 templates = Environment(
@@ -8,4 +8,5 @@ templates = Environment(
 	lstrip_blocks=True,
 	auto_reload=os.getenv("DEBUG") == "1",
 	cache_size=400,
+	autoescape=select_autoescape(),
 )
