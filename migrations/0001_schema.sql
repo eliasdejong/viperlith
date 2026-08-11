@@ -7,7 +7,7 @@ create table if not exists channels (
 
 create table if not exists users (
 	id integer primary key,
-	nickname text not null unique default ('user_' || hex(randomblob(4))),
+	nickname text not null default ('user_' || hex(randomblob(4))),	
 	session_id text not null unique,
 	current_channel_id integer references channels(id) on delete set null,
 	created_ts real not null default (unixepoch('now'))

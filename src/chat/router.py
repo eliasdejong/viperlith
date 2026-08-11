@@ -46,9 +46,10 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 			"X-Accel-Buffering": "no",
 		}
 	)
-
+import time
 @post("/chat/send-message", sync_to_thread=False)
 def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	time.sleep(2)
 	model = send_msg_decoder.decode(signals_json).message
 	model.session_id = sid
 	srt.put(Q.send_msg, msgpack_encoder.encode(model))
