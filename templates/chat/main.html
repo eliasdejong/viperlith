@@ -7,22 +7,38 @@
 			(+) Open channel
 		</button>
 		<hr class="text-slate-500">
-		<button class="px-2 h-12 overflow-hidden hover:bg-slate-700
-						text-white
-						border-2 border-slate-500
-						hover:cursor-pointer
-						rounded-md">
-			Default Channel
-		</button>
+		{% for i in con.execute("""
+			select
+				c.name
+			from channels c
+			join users u on u.session_id = ?
+			join channel_memberships cm on cm.user_id = u.id
+			where c.id = cm.channel_id
+			""",
+			(sid,)
+		) %}
+			<button class="px-2 h-12 overflow-hidden hover:bg-slate-700
+							text-white
+							border-2 border-slate-500
+							hover:cursor-pointer
+							rounded-md">
+				{{ i[0] | escape }}
+			</button>
+		{% endfor %}
 	</div>
 	<div class="flex flex-col flex-grow">
-		{#
-		{% for i in con.execute("select * from channels") %}
+		{% for i in con.execute("""
+			select
+				c.name
+			from channels c
+			join users u on u.session_id = ?
+			join channel_memberships cm on cm.user_id = u.id
+			where c.id = cm.channel_id
+			""",
+			(sid,)
+		) %}
 			<div class="color-white">{{ i[0] }}</div>
-			<div class="color-white">{{ i[1] }}</div>
-			<div class="color-white">{{ i[2] }}</div>
 		{% endfor %}
-		#}
 
 		<!-- <pre data-json-signals class="text-white"></pre> -->
 
@@ -34,11 +50,11 @@
 					m.content,
 					m.created_ts
 				from messages m
-				join users u on u.session_id = :session_id
+				join users u on u.session_id = ?
 				where m.channel_id = u.current_channel_id
 				order by m.created_ts
 				""",
-				{"session_id": sid}
+				(sid,)
 			) %}
 				<div class="m-1.5 text-white">
 					<p class="text-slate-500">
