@@ -9,18 +9,22 @@ from src.util.db_migration import run_migration
 
 def writer_tick():
 	with con:
-		con.executemany(
-			"INSERT or ignore into users (session_id) values (:session_id)",
-			drain(Q.insert_user)
+		# Newly created users join the default "starcord" channel
+		con.executemany("""
+			INSERT or ignore into users (session_id, current_channel_id)
+			select :session_id, id
+			from channels
+			where name = 'starcord';
+
+			insert or ignore into channel_memberships (user_id, channel_id, role)
+			select u.id, u.current_channel_id, 'guest'
+			from users u
+			where u.session_id = :session_id
+				and u.current_channel_id is not NULL;
+			""", drain(Q.insert_user)
 		)
 
-		# Set 'starcord' as the default channel
-		con.execute("""
-			UPDATE users
-			set current_channel_id = starcord_channel.id
-			from (select id from channels where name = 'starcord') as starcord_channel
-			where current_channel_id is NULL
-		""")
+		
 
 		con.executemany("""
 			INSERT into messages (channel_id, user_id, content)

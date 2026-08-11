@@ -24,10 +24,32 @@
 		{% endfor %}
 		#}
 
-		<div class="flex flex-col flex-grow items-stretch">
-			
-			<pre data-json-signals class="text-white"></pre>
+		<!-- <pre data-json-signals class="text-white"></pre> -->
 
+		<div class="flex flex-col flex-grow items-stretch">
+			{% for i in con.execute("""
+				select
+					u.nickname,
+					m.content,
+					m.created_ts
+				from messages m
+				join users u on u.session_id = :session_id
+				where m.channel_id = u.current_channel_id
+				order by m.created_ts
+				""",
+				{"session_id": sid}
+			) %}
+				<div class="m-1.5 text-white">
+					<p class="text-slate-500">
+						{{ i[0] }}
+						<span
+							data-text="(new Date({{ i[2] * 1000 }})).toLocaleString()"
+							class="text-slate-700 text-xs"
+						></span>
+					</p>
+					<p>{{ i[1] }}</p>
+				</div>
+			{% endfor %}
 		</div>
 
 		<hr class="text-slate-500">
@@ -54,7 +76,7 @@
 				autocomplete="off"
 				autocorrect="off"
 				spellcheck="false"
-				class="h-32 w-full p-2 bg-slate-500
+				class="h-24 w-full p-2 bg-slate-500
 						align-top 
 						rounded-md
 						focus:outline-none focus:ring-2 focus:ring-cyan-100
