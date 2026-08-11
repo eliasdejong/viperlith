@@ -26,7 +26,8 @@
 
 		<!-- <pre data-json-signals class="text-white"></pre> -->
 
-		<div class="flex flex-col flex-grow items-stretch">
+		<div class="flex flex-col flex-grow items-stretch
+					overflow-y-scroll">
 			{% for i in con.execute("""
 				select
 					u.nickname,
@@ -41,13 +42,13 @@
 			) %}
 				<div class="m-1.5 text-white">
 					<p class="text-slate-500">
-						{{ i[0] }}
+						{{ i[0] | escape }}
 						<span
 							data-text="(new Date({{ i[2] * 1000 }})).toLocaleString()"
 							class="text-slate-700 text-xs"
 						></span>
 					</p>
-					<p>{{ i[1] }}</p>
+					<p class="break-all">{{ i[1] | escape }}</p>
 				</div>
 			{% endfor %}
 		</div>
