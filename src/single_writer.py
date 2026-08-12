@@ -32,6 +32,10 @@ def writer_tick():
 			select u.id, (select id from channels where name = :name)
 			from users u
 			where u.session_id = :session_id;
+
+			update users as u
+			set current_channel_id = (select id from channels where name = :name)
+			where u.session_id = :session_id;
 		""", drain(Q.open_channel))
 
 		# Insert messages
@@ -43,9 +47,6 @@ def writer_tick():
 				:content
 			)
 		""", drain(Q.send_msg))
-
-
-
 
 def run_writer():
 	run_migration()
