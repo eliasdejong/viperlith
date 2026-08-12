@@ -20,22 +20,45 @@
 		</button>
 	</div>
 
-	<div class="p-4 overflow-y-auto">
-		hello
+	<div class="flex flex-col gap-2 p-4 overflow-y-auto">
+		<p>Only alphanumeric characters (a-Z, 0-9), hypens or underscores</p>
+		<p>Max. 32 characters</p>
+		<input
+			data-bind:open-channel.name
+			data-indicator:_fetching
+			data-attr:disabled="$_fetching"
+			type="text"
+			minlength="1"
+			maxlength="32"
+			placeholder="Channel name"
+			autocapitalize="off"
+			autocomplete="off"
+			autocorrect="off"
+			spellcheck="false"
+			class="p-2 bg-slate-500 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-100"
+		>
 	</div>
 
 	<div class="flex flex-row pt-4 justify-evenly items-center gap-3 border-t border-slate-800">
 		<button
-			data-on:click="$_infoDialogOpen = false"
+			data-indicator:_fetching
+			data-attr:disabled="$_fetching"
+			data-on:click="
+				@post('/chat/open-channel', {
+					filterSignals: {include: /^openChannel/}
+				}).then(() => (
+					$openChannel.name = '',
+					$_infoDialogOpen = false
+				))"
 			class="px-6 py-2 min-w-36
 					text-white
 					bg-slate-700 duration-150 hover:bg-slate-500 cursor-pointer
 					outline-none select-none rounded-md"
 		>
-			Ok
+			Open
 		</button>
 		<button
-			data-on:click="$_infoDialogOpen = false"
+			data-on:click="$openChannel.name = ''; $_infoDialogOpen = false;"
 			class="px-6 py-2 min-w-36
 					text-slate-800 duration-150 hover:bg-slate-400 cursor-pointer
 					border outline-none select-none rounded-md"

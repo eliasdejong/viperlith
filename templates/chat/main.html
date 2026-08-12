@@ -32,19 +32,6 @@
 		{% endfor %}
 	</div>
 	<div class="flex flex-col flex-grow">
-		{% for i in con.execute("""
-			select
-				c.name
-			from channels c
-			join users u on u.session_id = ?
-			join channel_memberships cm on cm.user_id = u.id
-			where c.id = cm.channel_id
-			""",
-			(sid,)
-		) %}
-			<div class="color-white">{{ i[0] }}</div>
-		{% endfor %}
-
 		<div data-init="el.scrollTop = el.scrollHeight"
 			class="flex flex-col flex-grow items-stretch
 					min-h-0
@@ -58,6 +45,7 @@
 				join users u on u.session_id = ?
 				where m.channel_id = u.current_channel_id
 				order by m.created_ts
+				limit 2500
 				""",
 				(sid,)
 			) %}

@@ -16,16 +16,25 @@ def writer_tick():
 			from channels
 			where name = 'starcord';
 
-			insert or ignore into channel_memberships (user_id, channel_id, role)
-			select u.id, u.current_channel_id, 'guest'
+			insert or ignore into channel_memberships (user_id, channel_id)
+			select u.id, u.current_channel_id
 			from users u
-			where u.session_id = :session_id
-				and u.current_channel_id is not NULL;
+			where u.session_id = :session_id and u.current_channel_id is not NULL;
 			""", drain(Q.insert_user)
 		)
 
-		
+		# Open channels
+		con.executemany("""
+			INSERT or ignore into channels (name)
+			values (:name);
 
+			insert or ignore into channel_memberships (user_id, channel_id)
+			select u.id, (select id from channels where name = :name)
+			from users u
+			where u.session_id = :session_id;
+		""", drain(Q.open_channel))
+
+		# Insert messages
 		con.executemany("""
 			INSERT into messages (channel_id, user_id, content)
 			values (
@@ -34,6 +43,8 @@ def writer_tick():
 				:content
 			)
 		""", drain(Q.send_msg))
+
+
 
 
 def run_writer():

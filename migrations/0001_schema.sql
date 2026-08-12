@@ -18,7 +18,6 @@ create index idx_users_session_id on users(session_id);
 create table if not exists channel_memberships (
 	user_id integer not null references users(id) on delete cascade,
 	channel_id integer not null references channels(id) on delete cascade,
-	role text not null check (role in ('admin', 'mod', 'member', 'guest', 'banned')),
 	created_ts real not null default (unixepoch('now')),
 	primary key (user_id, channel_id)
 );

@@ -54,11 +54,19 @@ def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any
 	srt.put(Q.send_msg, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
+@post("/chat/open-channel", sync_to_thread=False)
+def post_open_channel(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = open_channel_decoder.decode(signals_json).openChannel
+	model.session_id = sid
+	srt.put(Q.open_channel, msgpack_encoder.encode(model))
+	return ASGIResponse(status_code=204)
+
 router = Router(
 	path="/",
 	route_handlers=[
 		get_root,
 		get_updates,
 		post_send_msg,
+		post_open_channel,
 	]
 )

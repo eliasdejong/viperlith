@@ -20,7 +20,8 @@ import src.util.mpsc_queue as mpsc
 session_config = CookieBackendConfig(
 	secret=base64.b64decode(os.getenv("SESSION_KEY"))
 )
-rate_limit_config = RateLimitConfig(rate_limit=("second", 5))
+rate_limit_config = RateLimitConfig(rate_limit=("second", 20))
+# rate_limit_config = RateLimitConfig(rate_limit=("second", 5))
 
 @asynccontextmanager
 async def lifespan(app: Litestar):
