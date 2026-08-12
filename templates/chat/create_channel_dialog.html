@@ -21,7 +21,13 @@
 	</div>
 
 	<div class="flex flex-col gap-2 p-4 overflow-y-auto">
-		<p>Only alphanumeric characters (a-Z, 0-9), hypens or underscores</p>
+		<p>Allowed characters:</p>
+		<ol class="pl-4">
+			<li>1. alphanumeric characters (a-Z, 0-9)</li>
+			<li>2. hyphens</li>
+			<li>3. underscores</li>
+		</ol>
+		<p>May not start with a number or hyphen</p>
 		<p>Max. 32 characters</p>
 		<input
 			data-bind:open-channel.name
@@ -35,7 +41,9 @@
 			autocomplete="off"
 			autocorrect="off"
 			spellcheck="false"
-			class="p-2 bg-slate-500 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-100"
+			class="p-2 bg-slate-500 rounded-md
+					focus:outline-none focus:ring-2 focus:ring-cyan-100
+					focus:border-transparent transition duration-150"
 		>
 	</div>
 
