@@ -1,11 +1,16 @@
 <body class="flex flex-row h-screen bg-slate-950">
 	<div class="w-64 flex flex-col bg-slate-800
 				p-2 gap-2">
-		<button class="px-2 h-12 bg-slate-500 hover:bg-slate-400
-						hover:cursor-pointer
-						rounded-md">
+		<button
+			data-on:click="$_infoDialogOpen = true"
+			class="px-2 h-12 bg-slate-500 hover:bg-slate-400
+					hover:cursor-pointer
+					rounded-md">
 			(+) Open channel
 		</button>
+
+		{% include 'chat/create_channel_dialog.html' %}
+
 		<hr class="text-slate-500">
 		{% for i in con.execute("""
 			select
@@ -40,9 +45,11 @@
 			<div class="color-white">{{ i[0] }}</div>
 		{% endfor %}
 
-		<!-- <pre data-json-signals class="text-white"></pre> -->
-
-		<div class="flex flex-col flex-grow items-stretch
+		<div
+			id="messages"
+			data-init="el.scrollTop = el.scrollHeight"
+			class="flex flex-col flex-grow items-stretch
+					min-h-0
 					overflow-y-scroll">
 			{% for i in con.execute("""
 				select
@@ -56,7 +63,8 @@
 				""",
 				(sid,)
 			) %}
-				<div class="m-1.5 text-white">
+				<div style="overflow-anchor: none;"
+					class="m-1.5 text-white">
 					<p class="text-slate-500">
 						{{ i[0] }}
 						<span
@@ -67,6 +75,7 @@
 					<p class="break-all">{{ i[1] }}</p>
 				</div>
 			{% endfor %}
+			<div id="scroll-anchor" style="overflow-anchor: auto;" class="min-h-1"></div>
 		</div>
 
 		<hr class="text-slate-500">
@@ -75,8 +84,8 @@
 			<textarea
 				type="text"
 				data-bind:message.content
-				data-indicator:_sending-message
-				data-attr:disabled="$_sendingMessage"
+				data-indicator:_fetching
+				data-attr:disabled="$_fetching"
 				data-on:keydown="
 					evt.key == 'Enter' && !evt.shiftKey
 					&& (
@@ -85,7 +94,7 @@
 						&& (
 							@post('/chat/send-message', {
 								filterSignals: {include: /^message/}
-							}).then(() => el.value = '')
+							}).then(() => (el.value = '', el.focus()))
 						)
 					)"
 				placeholder="Type your message..."
