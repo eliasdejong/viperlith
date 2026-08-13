@@ -1,14 +1,13 @@
 <body class="flex flex-row h-screen bg-slate-950">
-	<div class="w-64 flex flex-col bg-slate-800
-				p-2 gap-2">
-
+	<div class="flex flex-col p-2 gap-2 w-64 bg-slate-800">
+		
 		<h2 class="text-white text-2xl font-audiowide text-center">StarCord</h2>
 
 		<hr class="text-slate-500">
 
 		<button
 			data-on:click="$_infoDialogOpen = true"
-			class="px-2 h-12 bg-slate-500 hover:bg-slate-400
+			class="px-2 min-h-12 bg-slate-500 hover:bg-slate-400
 					hover:cursor-pointer
 					rounded-md">
 			✚ Open channel
@@ -16,43 +15,43 @@
 
 		{% include 'chat/create_channel_dialog.html' %}
 
-		<!-- <hr class="text-slate-500"> -->
-
-		{% for i in con.execute("""
-			select
-				c.name,
-				c.id = u.current_channel_id as is_current_channel
-			from channels c
-			join users u on u.session_id = ?
-			join channel_memberships cm on cm.user_id = u.id
-			where c.id = cm.channel_id
-			""",
-			(sid,)
-		) %}
-			<button	data-on:mousedown="
-						@post('/chat/open-channel', {
-							payload: {openChannel: {name: '{{ i[0] }}'}}
-						})"
-					{% if i[1] %} disabled {% endif %}
-					class="flex flex-row justify-center items-center
-							px-2 min-h-12 overflow-hidden
-							hover:cursor-pointer
-							{% if i[1] %}
-							text-black bg-slate-500
-							{% else %}
-							text-white hover:bg-slate-700 border-slate-500 border-2
-							{% endif %}
-							rounded-md">
-				<span class="flex flex-grow break-all">{{ i[0] }}</span>
-				<span data-on:mousedown="
-						@post('/chat/close-channel', {
-							payload: {closeChannel: {name: '{{ i[0] }}'}}
-						})"
-					class="py-1 px-2 hover:bg-slate-400 rounded-md">
-					✕
-				</span>
-			</button>
-		{% endfor %}
+		<div class="flex flex-col overflow-y-scroll gap-2">
+			{% for i in con.execute("""
+				select
+					c.name,
+					c.id = u.current_channel_id as is_current_channel
+				from channels c
+				join users u on u.session_id = ?
+				join channel_memberships cm on cm.user_id = u.id
+				where c.id = cm.channel_id
+				""",
+				(sid,)
+			) %}
+				<button	data-on:mousedown="
+							@post('/chat/open-channel', {
+								payload: {openChannel: {name: '{{ i[0] }}'}}
+							})"
+						{% if i[1] %} disabled {% endif %}
+						class="flex flex-row justify-center items-center
+								px-2 min-h-12 overflow-hidden
+								hover:cursor-pointer
+								{% if i[1] %}
+								text-black bg-slate-500
+								{% else %}
+								text-white hover:bg-slate-700 border-slate-500 border-2
+								{% endif %}
+								rounded-md">
+					<span class="flex flex-grow break-all">{{ i[0] }}</span>
+					<span data-on:mousedown="
+							@post('/chat/close-channel', {
+								payload: {closeChannel: {name: '{{ i[0] }}'}}
+							})"
+						class="py-1 px-2 hover:bg-slate-400 rounded-md">
+						✕
+					</span>
+				</button>
+			{% endfor %}
+		</div>
 
 		<input
 			data-on:change__debounce.400ms="@post('/chat/set-nickname')"
