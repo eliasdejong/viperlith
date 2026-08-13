@@ -9,4 +9,5 @@ QUEUE_SIZES = {
 	"send_msg": 4096,
 	"open_channel": 4096,
 	"close_channel": 4096,
+	"set_nickname": 4096,
 }

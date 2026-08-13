@@ -22,6 +22,15 @@ def writer_tick():
 			drain(Q.insert_user)
 		)
 
+		# Set nicknames
+		con.executemany("""
+			UPDATE users as u
+			set nickname = :nickname
+			where session_id = :session_id
+			""",
+			drain(Q.set_nickname)
+		)
+
 		# Open channels
 		con.executemany("""
 			INSERT or ignore into channels (name)
@@ -56,7 +65,9 @@ def writer_tick():
 				(select id from users where session_id = :session_id),
 				:content
 			)
-		""", drain(Q.send_msg))
+			""",
+			drain(Q.send_msg)
+		)
 
 def run_writer():
 	run_migration()

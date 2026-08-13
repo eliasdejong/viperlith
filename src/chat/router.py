@@ -68,6 +68,13 @@ def post_close_channel(request: Request, sid: NamedDependency[str], signals_json
 	srt.put(Q.close_channel, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
+@post("/chat/set-nickname", sync_to_thread=False)
+def post_set_nickname(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = set_nickname_decoder.decode(signals_json).setNickname
+	model.session_id = sid
+	srt.put(Q.set_nickname, msgpack_encoder.encode(model))
+	return ASGIResponse(status_code=204)
+
 router = Router(
 	path="/",
 	route_handlers=[
@@ -76,5 +83,6 @@ router = Router(
 		post_send_msg,
 		post_open_channel,
 		post_close_channel,
+		post_set_nickname,
 	]
 )
