@@ -26,9 +26,7 @@
 			<button	data-on:mousedown="
 						$_infoDialogOpen = false;
 						$openChannel.name = '{{ i[0] }}';
-						@post('/chat/open-channel', {
-							filterSignals: {include: /^openChannel/}
-						}).then(() => $openChannel.name = '');"
+						@post('/chat/open-channel').then(() => $openChannel.name = '');"
 					{% if i[1] %} disabled {% endif %}
 					class="px-2 h-12 overflow-hidden 
 							{% if i[1] %}
@@ -87,11 +85,7 @@
 					&& (
 						evt.preventDefault(),
 						el.value != ''
-						&& (
-							@post('/chat/send-message', {
-								filterSignals: {include: /^message/}
-							}).then(() => (el.value = '', el.focus()))
-						)
+						&& @post('/chat/send-message').then(() => (el.value = '', el.focus()))
 					)"
 				placeholder="Type your message..."
 				autocapitalize="off"
