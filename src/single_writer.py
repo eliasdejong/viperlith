@@ -56,7 +56,7 @@ def run_writer():
 		frames = 0
 		for _ in frame_ticks():
 			writer_tick()
-			if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0: # every 4hrs
+			if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0:
 				con.pragma("optimize")
 			frames += 1
 	finally:
