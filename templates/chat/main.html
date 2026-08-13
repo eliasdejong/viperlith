@@ -59,9 +59,9 @@
 					m.content,
 					m.created_ts
 				from messages m
-				join users u on u.session_id = ?
-				where m.channel_id = u.current_channel_id
-				order by m.created_ts
+				join users u on u.id = m.user_id
+				where m.channel_id = (select current_channel_id from users where session_id = ?)
+				order by m.created_ts, m.id
 				limit 2500
 				""",
 				(sid,)
