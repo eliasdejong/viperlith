@@ -1,4 +1,6 @@
 import os
+from itertools import chain
+
 from src.util.db_write_con import con
 from src.util.frame_ticks import frame_ticks
 from src.util.mpsc_queue import Q, drain
@@ -9,18 +11,12 @@ from src.util.db_migration import run_migration
 
 def writer_tick():
 	with con:
-		# Newly created users join the default "starcord" channel
-		con.executemany("""
-			INSERT or ignore into users (session_id, current_channel_id)
-			select :session_id, id
-			from channels
-			where name = 'starcord';
-
-			insert or ignore into channel_memberships (user_id, channel_id)
-			select u.id, u.current_channel_id
-			from users u
-			where u.session_id = :session_id and u.current_channel_id is not NULL;
-			""", drain(Q.insert_user)
+		# Insert new users
+		inserted_users = con.executemany("""
+			INSERT or ignore into users (session_id) values (:session_id)
+			returning session_id
+			""",
+			drain(Q.insert_user)
 		)
 
 		# Open channels
@@ -36,7 +32,12 @@ def writer_tick():
 			update users as u
 			set current_channel_id = (select id from channels where name = :name)
 			where u.session_id = :session_id;
-		""", drain(Q.open_channel))
+			""",
+			chain(
+				drain(Q.open_channel),
+				({"name": "starcord", "session_id": i[0]} for i in inserted_users)
+			)
+		)
 
 		# Insert messages
 		con.executemany("""

@@ -36,8 +36,8 @@ def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
-	model = InsertUser(session_id=sid)
-	srt.put(Q.insert_user, msgpack_encoder.encode(model))
+	insert_user_model = InsertUser(session_id=sid)
+	srt.put(Q.insert_user, msgpack_encoder.encode(insert_user_model))
 	return Stream(
 		content=sse_generator(render, sid),
 		media_type="text/event-stream",

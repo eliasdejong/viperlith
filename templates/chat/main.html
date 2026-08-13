@@ -24,11 +24,11 @@
 			(sid,)
 		) %}
 			<button	data-on:mousedown="
-					$_infoDialogOpen = false;
-					$openChannel.name = '{{ i[0] }}';
-					@post('/chat/open-channel', {
-						filterSignals: {include: /^openChannel/}
-					}).then(() => $openChannel.name = '');"
+						$_infoDialogOpen = false;
+						$openChannel.name = '{{ i[0] }}';
+						@post('/chat/open-channel', {
+							filterSignals: {include: /^openChannel/}
+						}).then(() => $openChannel.name = '');"
 					{% if i[1] %} disabled {% endif %}
 					class="px-2 h-12 overflow-hidden 
 							{% if i[1] %}
