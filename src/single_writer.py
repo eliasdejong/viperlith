@@ -12,23 +12,15 @@ from src.util.db_migration import run_migration
 def writer_tick():
 	with con:
 		# Insert new users
-		inserted_users = con.executemany("""
+		new_users = con.executemany("""
 			INSERT or ignore into users (session_id, current_channel_id)
 			values (
 				:session_id,
 				(select id from channels where name = 'starcord')
 			)
+			returning session_id
 			""",
 			drain(Q.insert_user)
-		)
-
-		# Set nicknames
-		con.executemany("""
-			UPDATE users as u
-			set nickname = :nickname
-			where session_id = :session_id
-			""",
-			drain(Q.set_nickname)
 		)
 
 		# Open channels
@@ -45,7 +37,10 @@ def writer_tick():
 			set current_channel_id = (select id from channels where name = :name)
 			where u.session_id = :session_id;
 			""",
-			drain(Q.open_channel)
+			chain(
+				({"name": "starcord", "session_id": u[0]} for u in new_users),
+				drain(Q.open_channel),
+			)
 		)
 
 		# Close channels
@@ -67,6 +62,15 @@ def writer_tick():
 			)
 			""",
 			drain(Q.send_msg)
+		)
+
+		# Set nicknames
+		con.executemany("""
+			UPDATE users as u
+			set nickname = :nickname
+			where session_id = :session_id
+			""",
+			drain(Q.set_nickname)
 		)
 
 def run_writer():
