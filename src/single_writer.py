@@ -13,8 +13,11 @@ def writer_tick():
 	with con:
 		# Insert new users
 		inserted_users = con.executemany("""
-			INSERT or ignore into users (session_id) values (:session_id)
-			returning session_id
+			INSERT or ignore into users (session_id, current_channel_id)
+			values (
+				:session_id,
+				(select id from channels where name = 'starcord')
+			)
 			""",
 			drain(Q.insert_user)
 		)
@@ -33,10 +36,16 @@ def writer_tick():
 			set current_channel_id = (select id from channels where name = :name)
 			where u.session_id = :session_id;
 			""",
-			chain(
-				drain(Q.open_channel),
-				({"name": "starcord", "session_id": i[0]} for i in inserted_users)
-			)
+			drain(Q.open_channel)
+		)
+
+		# Close channels
+		con.executemany("""
+			DELETE from channel_memberships as cm
+			where user_id = (select id from users where session_id = :session_id)
+				and channel_id = (select id from channels where name = :name)
+			""",
+			drain(Q.close_channel)
 		)
 
 		# Insert messages

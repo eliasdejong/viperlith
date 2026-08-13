@@ -32,3 +32,14 @@ class OpenChannelOuter(Struct):
 	openChannel: OpenChannel
 
 open_channel_decoder = msgspec.json.Decoder(type=OpenChannelOuter)
+
+
+
+class CloseChannel(Struct):
+	name: UnixName
+	session_id: str | None = None
+
+class CloseChannelOuter(Struct):
+	closeChannel: CloseChannel
+
+close_channel_decoder = msgspec.json.Decoder(type=CloseChannelOuter)

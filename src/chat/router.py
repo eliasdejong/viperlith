@@ -61,6 +61,13 @@ def post_open_channel(request: Request, sid: NamedDependency[str], signals_json:
 	srt.put(Q.open_channel, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
+@post("/chat/close-channel", sync_to_thread=False)
+def post_close_channel(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = close_channel_decoder.decode(signals_json).closeChannel
+	model.session_id = sid
+	srt.put(Q.close_channel, msgpack_encoder.encode(model))
+	return ASGIResponse(status_code=204)
+
 router = Router(
 	path="/",
 	route_handlers=[
@@ -68,5 +75,6 @@ router = Router(
 		get_updates,
 		post_send_msg,
 		post_open_channel,
+		post_close_channel,
 	]
 )

@@ -8,4 +8,5 @@ QUEUE_SIZES = {
 	"insert_user": 4096,
 	"send_msg": 4096,
 	"open_channel": 4096,
+	"close_channel": 4096,
 }
