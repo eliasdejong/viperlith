@@ -132,7 +132,6 @@ Because hypermedia-driven applications (HDA) are just sending HTML, a number of 
 - dependency arrays
 - prop drilling
 - React compiler
-- Immer
 - vdom
 - React context
 
