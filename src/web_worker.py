@@ -45,7 +45,7 @@ app = Litestar(
 		brotli_mode="text",
 		brotli_lgwin=21, # 2^21 = 2MB context window
 		brotli_lgblock=0,
-		brotli_gzip_fallback=True,
+		brotli_gzip_fallback=False,
 	),
 	dependencies={
 		"sid": Provide(get_session_id, sync_to_thread=False),
