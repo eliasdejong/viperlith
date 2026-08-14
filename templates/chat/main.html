@@ -38,7 +38,7 @@
 
 		{% include 'chat/create_channel_dialog.html' %}
 
-		<div class="flex flex-col overflow-y-scroll gap-2">
+		<div class="flex flex-col overflow-y-auto gap-2">
 			{% for i in con.execute("""
 				select
 					c.name,
@@ -104,8 +104,7 @@
 	<!-- Messages -->
 	<div class="flex flex-col flex-grow">
 		<div class="flex flex-col flex-grow items-stretch
-					min-h-0
-					overflow-y-scroll">
+					min-h-0 overflow-y-auto">
 			{% for i in con.execute("""
 				select
 					u.nickname,
