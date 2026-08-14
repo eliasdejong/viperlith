@@ -138,7 +138,6 @@ Because hypermedia-driven applications (HDA) are just sending HTML, a number of 
 
 ### Rendering concepts
 - (selective/partial/progressive) hydration
-- use client/server
 - (incremental/deferred) static regeneration
 
 
