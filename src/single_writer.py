@@ -20,26 +20,26 @@ def writer_tick():
 			)
 			returning session_id
 			""",
-			drain(Q.insert_user)
+			drain(Q.user_insert)
 		)
 
 		# Open channels
 		con.executemany("""
 			INSERT or ignore into channels (name)
-			values (:name);
+			values (:channelOpen);
 
 			insert or ignore into channel_memberships (user_id, channel_id)
-			select u.id, (select id from channels where name = :name)
+			select u.id, (select id from channels where name = :channelOpen)
 			from users u
 			where u.session_id = :session_id;
 
 			update users as u
-			set current_channel_id = (select id from channels where name = :name)
+			set current_channel_id = (select id from channels where name = :channelOpen)
 			where u.session_id = :session_id;
 			""",
 			chain(
-				({"name": "starcord", "session_id": u[0]} for u in new_users),
-				drain(Q.open_channel),
+				({"channelOpen": "starcord", "session_id": u[0]} for u in new_users),
+				drain(Q.channel_open),
 			)
 		)
 
@@ -47,9 +47,9 @@ def writer_tick():
 		con.executemany("""
 			DELETE from channel_memberships as cm
 			where user_id = (select id from users where session_id = :session_id)
-				and channel_id = (select id from channels where name = :name)
+				and channel_id = (select id from channels where name = :channelClose)
 			""",
-			drain(Q.close_channel)
+			drain(Q.channel_close)
 		)
 
 		# Insert messages
@@ -58,19 +58,19 @@ def writer_tick():
 			values (
 				(select current_channel_id from users where session_id = :session_id),
 				(select id from users where session_id = :session_id),
-				:content
+				:messageSend
 			)
 			""",
-			drain(Q.send_msg)
+			drain(Q.msg_send)
 		)
 
 		# Set nicknames
 		con.executemany("""
 			UPDATE users as u
-			set nickname = :setNickname
+			set nickname = :nicknameSet
 			where session_id = :session_id
 			""",
-			drain(Q.set_nickname)
+			drain(Q.nickname_set)
 		)
 
 def run_writer():

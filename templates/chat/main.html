@@ -1,19 +1,19 @@
 <body class="flex flex-row h-dvh bg-slate-950">
 	<!-- Hamburger Icon -->
 	<button
-		data-signals:side-panel-open="false"
-		data-on:click="$sidePanelOpen = !$sidePanelOpen"
+		data-signals:_side-panel-open="false"
+		data-on:click="$_sidePanelOpen = !$_sidePanelOpen"
 		class="w-8 h-8 m-2 absolute md:hidden text-white inset-0"
 	>
 		<svg fill="currentColor" viewBox="0 0 20 20" class="shadow drop-shadow">
 			<path
-				data-show="!$sidePanelOpen"
+				data-show="!$_sidePanelOpen"
 				fill-rule="evenodd"
 				d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM9 15a1 1 0 011-1h6a1 1 0 110 2h-6a1 1 0 01-1-1z"
 				clip-rule="evenodd"
 			></path>
 			<path
-				data-show="$sidePanelOpen"
+				data-show="$_sidePanelOpen"
 				fill-rule="evenodd"
 				d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
 				clip-rule="evenodd"
@@ -22,7 +22,7 @@
 	</button>
 
 	<!-- Left Panel -->
-	<div data-class="{'flex': $sidePanelOpen, 'hidden': !$sidePanelOpen}"
+	<div data-class="{'flex': $_sidePanelOpen, 'hidden': !$_sidePanelOpen}"
 		class="hidden md:flex flex-col w-64 p-2 gap-2 bg-slate-800">
 
 		<h2 class="text-white text-2xl font-audiowide text-center">StarCord</h2>
@@ -51,8 +51,8 @@
 				(sid,)
 			) %}
 				<button	data-on:mousedown="
-							@post('/chat/open-channel', {
-								payload: {openChannel: {name: '{{ i[0] }}'}}
+							@post('/chat/channel-open', {
+								payload: {channelOpen: '{{ i[0] }}'}
 							})"
 						{% if i[1] %} disabled {% endif %}
 						class="flex flex-row justify-center items-center
@@ -66,8 +66,8 @@
 								rounded-md hover:cursor-pointer">
 					<span class="flex flex-grow break-all">{{ i[0] }}</span>
 					<span data-on:mousedown="
-							@post('/chat/close-channel', {
-								payload: {closeChannel: {name: '{{ i[0] }}'}}
+							@post('/chat/channel-close', {
+								payload: {channelClose: {name: '{{ i[0] }}'}}
 							})"
 						class="py-1 px-2 hover:bg-slate-400 rounded-md">
 						✕
@@ -76,10 +76,11 @@
 			{% endfor %}
 		</div>
 
+		<!-- <pre data-json-signals class="text-white"></pre> -->
 		
 		<input
-			data-on:keydown__debounce.400ms="@post('/chat/set-nickname')"
-			data-bind:set-nickname
+			data-on:keydown__debounce.400ms="@post('/chat/nickname-set')"
+			data-bind:nickname-set
 			value="{{
 				con.execute(
 					'select nickname from users where session_id = ?',
@@ -98,7 +99,7 @@
 					focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:bg-slate-500
 					focus:border-transparent transition duration-150"
 		>
-		<p data-text="$setNicknameError" class="text-red-500"></p>
+		<p data-text="$nicknameSetError" class="text-red-500"></p>
 	</div>
 
 	<!-- Messages -->
@@ -139,7 +140,7 @@
 		<div class="p-2 flex justify-center items-center">
 			<textarea
 				type="text"
-				data-bind:message.content
+				data-bind:message-send
 				data-indicator:_fetching
 				data-attr:disabled="$_fetching"
 				data-on:keydown="
@@ -147,7 +148,7 @@
 					&& (
 						evt.preventDefault(),
 						el.value != ''
-						&& @post('/chat/send-message').then(() => (el.value = '', el.focus()))
+						&& @post('/chat/message-send').then(() => (el.value = '', el.focus()))
 					)"
 				placeholder="Type your message..."
 				autocapitalize="off"

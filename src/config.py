@@ -5,9 +5,9 @@ WORKER_COUNT = max(1, os.cpu_count() - 1) if os.getenv("DEBUG") == "0" else 1
 
 # identifier : size (bytes)
 QUEUE_SIZES = {
-	"insert_user": 4096,
-	"send_msg": 4096,
-	"open_channel": 4096,
-	"close_channel": 4096,
-	"set_nickname": 4096,
+	"user_insert": 4096,
+	"msg_send": 4096,
+	"channel_open": 4096,
+	"channel_close": 4096,
+	"nickname_set": 4096,
 }

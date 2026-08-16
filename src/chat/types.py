@@ -12,46 +12,37 @@ Username = Annotated[
 	str, Meta(min_length=1, max_length=32, pattern="^[A-Za-z0-9 _-]*$")
 ]
 
-class InsertUser(Struct):
+class UserInsert(Struct):
 	session_id: str
 
 
 
-class SendMessage(Struct):
-	content: Annotated[str, Meta(min_length=1, max_length=500)]
+class MessageSend(Struct):
+	messageSend: Annotated[str, Meta(min_length=1, max_length=500)]
 	session_id: str | None = None
 
-class SendMessageOuter(Struct):
-	message: SendMessage
-
-send_msg_decoder = msgspec.json.Decoder(type=SendMessageOuter)
+msg_send_decoder = msgspec.json.Decoder(type=MessageSend)
 
 
 
-class OpenChannel(Struct):
-	name: UnixName
+class ChannelOpen(Struct):
+	channelOpen: UnixName
 	session_id: str | None = None
 
-class OpenChannelOuter(Struct):
-	openChannel: OpenChannel
-
-open_channel_decoder = msgspec.json.Decoder(type=OpenChannelOuter)
+channel_open_decoder = msgspec.json.Decoder(type=ChannelOpen)
 
 
 
-class CloseChannel(Struct):
-	name: UnixName
+class ChannelClose(Struct):
+	channelClose: UnixName
 	session_id: str | None = None
 
-class CloseChannelOuter(Struct):
-	closeChannel: CloseChannel
-
-close_channel_decoder = msgspec.json.Decoder(type=CloseChannelOuter)
+channel_close_decoder = msgspec.json.Decoder(type=ChannelClose)
 
 
 
-class SetNickname(Struct):
-	setNickname: Username
+class NicknameSet(Struct):
+	nicknameSet: Username
 	session_id: str | None = None
 
-set_nickname_decoder = msgspec.json.Decoder(type=SetNickname)
+nickname_set_decoder = msgspec.json.Decoder(type=NicknameSet)

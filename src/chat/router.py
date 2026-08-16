@@ -36,8 +36,8 @@ def get_root(request: Request, sid: NamedDependency[str]) -> Response:
 
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
-	insert_user_model = InsertUser(session_id=sid)
-	srt.put(Q.insert_user, msgpack_encoder.encode(insert_user_model))
+	model = UserInsert(session_id=sid)
+	srt.put(Q.user_insert, msgpack_encoder.encode(model))
 	return Stream(
 		content=sse_generator(render, sid),
 		media_type="text/event-stream",
@@ -47,45 +47,45 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 		}
 	)
 
-@post("/chat/send-message", sync_to_thread=False)
-def post_send_msg(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
-	model = send_msg_decoder.decode(signals_json).message
+@post("/chat/message-send", sync_to_thread=False)
+def post_msg_send(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = msg_send_decoder.decode(signals_json)
 	model.session_id = sid
-	srt.put(Q.send_msg, msgpack_encoder.encode(model))
+	srt.put(Q.msg_send, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
-@post("/chat/open-channel", sync_to_thread=False)
-def post_open_channel(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
-	model = open_channel_decoder.decode(signals_json).openChannel
+@post("/chat/channel-open", sync_to_thread=False)
+def post_channel_open(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = channel_open_decoder.decode(signals_json)
 	model.session_id = sid
-	srt.put(Q.open_channel, msgpack_encoder.encode(model))
+	srt.put(Q.channel_open, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
-@post("/chat/close-channel", sync_to_thread=False)
-def post_close_channel(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
-	model = close_channel_decoder.decode(signals_json).closeChannel
+@post("/chat/channel-close", sync_to_thread=False)
+def post_channel_close(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+	model = channel_close_decoder.decode(signals_json)
 	model.session_id = sid
-	srt.put(Q.close_channel, msgpack_encoder.encode(model))
+	srt.put(Q.channel_close, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
-@post("/chat/set-nickname", sync_to_thread=False, status_code=200)
-def post_set_nickname(request: Request, sid: NamedDependency[str], signals_json: Any) -> dict[str, str]:
+@post("/chat/nickname-set", sync_to_thread=False, status_code=200)
+def post_nickname_set(request: Request, sid: NamedDependency[str], signals_json: Any) -> dict[str, str]:
 	try:
-		model = set_nickname_decoder.decode(signals_json)
+		model = nickname_set_decoder.decode(signals_json)
 		model.session_id = sid
-		srt.put(Q.set_nickname, msgpack_encoder.encode(model))
-		return {"setNicknameError": ""}
+		srt.put(Q.nickname_set, msgpack_encoder.encode(model))
+		return {"nicknameSetError": ""}
 	except msgspec.ValidationError as e:
-		return {"setNicknameError": "Allowed characters: 'A-Za-z0-9 _-'"}
+		return {"nicknameSetError": "Allowed characters: 'A-Za-z0-9 _-'"}
 	
 router = Router(
 	path="/",
 	route_handlers=[
 		get_root,
 		get_updates,
-		post_send_msg,
-		post_open_channel,
-		post_close_channel,
-		post_set_nickname,
+		post_msg_send,
+		post_channel_open,
+		post_channel_close,
+		post_nickname_set,
 	]
 )

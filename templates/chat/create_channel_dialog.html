@@ -30,7 +30,7 @@
 		<p>May not start with a number or hyphen</p>
 		<p>Max. 32 characters</p>
 		<input
-			data-bind:open-channel.name
+			data-bind:channel-open
 			data-indicator:_fetching
 			data-attr:disabled="$_fetching"
 			type="text"
@@ -52,8 +52,8 @@
 			data-indicator:_fetching
 			data-attr:disabled="$_fetching"
 			data-on:click="
-				@post('/chat/open-channel').then(() => (
-					$openChannel.name = '',
+				@post('/chat/channel-open').then(() => (
+					$channelOpen = '',
 					$_infoDialogOpen = false
 				))"
 			class="px-6 py-2 min-w-36
@@ -64,7 +64,7 @@
 			Open
 		</button>
 		<button
-			data-on:click="$openChannel.name = ''; $_infoDialogOpen = false;"
+			data-on:click="$channelOpen = ''; $_infoDialogOpen = false;"
 			class="px-6 py-2 min-w-36
 					text-slate-800 duration-150 hover:bg-slate-400 cursor-pointer
 					border outline-none select-none rounded-md"
