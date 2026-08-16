@@ -1,6 +1,6 @@
-# Viperlith Architecture: Or Why HTML Streaming is the Future
+# Viperlith Architecture: Or Why HTML Streaming is the Future of the Web
 ## Introduction
-`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events, "push" events as opposed to indivudal client polling with request-response cycles.
+`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client polling with request-response cycles.
 
 Viperlith is a small and opinionated full stack [Datastar](https://data-star.dev/) web application monolith written in Python, encapsulating these ideas. It can be used as a template or reference architecture. A Discord-like chat sample application is currently implemented which allows real-time chat rooms, creating/removing channels and setting nicknames.
 
@@ -31,7 +31,7 @@ This page will explain the concept of HTML Streaming and why it is the future of
 ## Datastar vs HTMX
 See also: [Why another framework?](https://data-star.dev/essays/why_another_framework).
 
-[HTMX](https://htmx.org/) is a great library that inspired many people to reconsider what is possible in web development. However when building large applications with HTMX, it has some inherent complexity that builds over time.
+[HTMX](https://htmx.org/) is a great library that inspired many people in the web development world to reconsider what is possible. However when building larger applications with HTMX, it has some inherent complexity that builds up over time.
 
 For some interactions, like showing a dropdown menu, sending a network request is undesirable. However HTMX provides very little in the way of client-side variables, necessitating additional JavaScript frameworks such as [Alpine.js](https://alpinejs.dev/). While lightweight, these frameworks introduce additional APIs and overhead while [not always playing well with htmx](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431). Datastar instead has **signals** and a lightweight set of [attributes](https://data-star.dev/reference/attributes) to build client-side expressions, meaning another library isn't needed for the majority of use cases.
 
@@ -58,7 +58,7 @@ The reason has to do with the earlier stated problem: what do you update, and wh
 
 
 
-## `view = f(state)``
+## `view = f(state)`
 The core of any interactive application can be expressed in a single formula:
 ```
     view = f(state)
@@ -73,29 +73,29 @@ For hypermedia-driven applications:
 
 
 ## Coming back to `hx-swap-oob`
-When the server controls the view, it can now do something clever: it can update whatever is stale and ignore the rest. There is no limit to how many `hx-swap-oob` elements can be included in a response; one, two, three, five, or every element on the page. There is no limit.
+When the server controls the view, it can now do something clever: it can update the stale parts on the screen and ignore the rest. There is no limit to how many `hx-swap-oob` elements can be included in a response; one, two, three, five, or every element on the page. There is no limit.
 
 Previously, your backend needed one API endpoint for every HTML fragment. Now, you just need a single endpoint: `/page/updates`.
 
-Your client can call this endpoint whenever and however many times it wants. Every time, the server will respond exactly with the right number of `hx-swap-oob` fragments so that you are fully up-to-date. Call the endpoint, and you're up-to-date! No more patchwork and manual fragment soup. The server has your back.
+Your client can call this endpoint whenever and however many times it wants. Every time, the server will respond exactly with the right number of `hx-swap-oob` fragments so that you are fully up-to-date. Call the endpoint, and you're caught up! No more patchwork and manual fragment soup, or worries about outdated information on the page. The server has your back.
 
 
 
-## Datastar: out-of-band by default
+## Datastar: Out-of-Band By Default
 In Datastar, responses are always out-of-band by default. For many HTMX users, this is very confusing since there is no `hx-target`. Looking at just the HTML markup, you cannot tell exactly what is going on.
 
-And this is by design: HTML is just a declarative markup of whatever should currently be displayed on the screen. It does not control the view, **because the server controls the view**.
+**And this is by design**: HTML is just a declarative markup of whatever should currently be displayed on the screen. It does not control the view, **because the server controls the view**.
 
-Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190). However, extending this concept: Datastar encourages you to do something a bit more radical: **to swap the entire page at once**. Finally, no more fragments. No more partials. Every. Request. Rebuilds. The entire page. Typically, the entire page is constructed from a single `render()` call on the backend.
+Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190). However, extending this concept: Datastar encourages something more radical: **to swap the entire page at once**. Finally, no more fragments. No more partials. Every. Request. Rebuilds. The entire page. The entire page will be constructed from a single `render()` call on the backend.
 
 
 
-## Full Page Rebuilds? Not in my Backyard
-Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. Full-page rebuilding eliminates most of these problems. Because every time you rebuild, you are up to date. No ifs or buts.
+## Full Page Rebuilds? Not in My Backyard
+Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. Full-page rebuilding eliminates most of these problems. Because everytime you rebuild, you are up to date. No ifs or buts.
 
 Unfortunately, now another issue comes up: **Performance**.
 
-> Now I have te rebuild my entire page on every tiny change, even when? Are you out of your mind? Do you know what that costs me? Cloud credits don't grow on trees you know?
+> Now I have te rebuild my entire page on every tiny change? Are you out of your mind? Do you know what that costs me? Cloud credits don't grow on trees you know?
 
 Datastar was born out of a desire for performance, by someone who was not traditionally a web developer but was forced into web development out of disgust for the ecosystem. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
 
@@ -108,7 +108,7 @@ Full-page rebuilds are faster than you think, provided your database and web ser
 
 
 ## The Magic Sauce: Idiomorph
-We will address performance on the server side, but let's address the client first. So the server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. Can we first confidently assert that you should not use inferior approaches for performance reasons. If that is the case, close this page and go back to React.
+We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. Can we confidently assert that you should not use inferior approaches for performance reasons. If that is the case, close this page and go back to React.
 
 Oh you're still here. So as I was saying, [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm and Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
 
@@ -117,23 +117,22 @@ Practically, this means we no longer have to care about partial rendering or dif
 
 
 ## Practically Cheating: Brotli Compression
-Oh, but you are concerned about network bandwidth? That which your cloud vendor bills you heavily for? Well, use of persistent SSE streams enables **streaming compression** across an entire session compared to mere individual requests. Using the browser's built-in [Brotli compression](https://en.wikipedia.org/wiki/Brotli), extra bytes are sent over the wire only if the content is changed. This achieves total compression ratio's upwards of 50-4000x, exceeding what is commonly attainable from gzipped responses.
+Oh, but you are concerned about network bandwidth? That which your cloud vendor bills you very heavily for? Well, use of persistent SSE streams enables **streaming compression** across an entire session compared to mere individual requests. Using the browser's built-in [Brotli compression](https://en.wikipedia.org/wiki/Brotli), extra bytes are sent over the wire only if the content is changed. This achieves total compression ratio's upwards of 50-4000x, exceeding what is commonly attainable from gzipped responses.
 
 Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server-Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
 
 Remember this:
-- GZip: Compresses only individual responses, discards the compression on every request
+- GZip: Compresses only individual responses, discards the compression window on every request
 - Brotli streaming compression over SSE: keeps the compression window for the duration of the stream
 
-An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the DOM where necessary when the content arrives.
+An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the real DOM where necessary.
 
 This brings us to...
 
 
 
 ## Why Server-Sent Events?
-First of all:
-### What are Server-Sent Events?
+### First of all: What are Server-Sent Events?
 To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
 
 For the full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
@@ -181,7 +180,7 @@ Oh and finally, HTTP traffic has a lot lower chance of getting intercepted by so
 ## Just use HTML
 <img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="675">
 
-The [htmx essays](https://htmx.org/essays/) have done a lot of the work already, you should not need convincing. But anyways, here we go.
+The [htmx essays](https://htmx.org/essays/) have done most of the work already and you should not need convincing on this. But anyways, here we go.
 
 ### Client-side state management
 One of the more complex ongoing problems in the SPA world is the management client-side state. Many solutions exists (Redux, Zustand, React Router).
@@ -194,9 +193,9 @@ The result of eliminating client-side state is that the browser becomes a "dumb"
 ### Obsoleting of the Virtual DOM
 In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating of table data, because browsers at the time struggled with this, especially on low-end client hardware.
 
-However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware has become more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. Given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
+However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware has become more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
 
-Consider that many of the most performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized over decades of engineering, and are written in native languages such as C++, compiled for the target hardware. The browser is at its core an engine designed to render HTML markup. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it's not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where the rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize the bulk of the work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
+Consider that many of the most performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized over decades of engineering, and are written in native languages such as C++, compiled for the target hardware. The browser is at its core an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it's not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where the rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize the bulk of the work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
 
 
 
@@ -233,10 +232,10 @@ Having the ability to render any HTML through templates, what do we need state o
 To give an idea for the sequence of events:
 1. The client connects for the first time, requesting the stream via `/updates`
 2. The server responds with the `text/event-stream` response type, and `Connection: Keep-Alive`, meaning the connection stays open
-3. The server continuously "pushes" an update of the screen over the SSE stream, anytime a resource on the server changes
-4. During this time, the client may be able to interact with the server via buttons etc. These send regular POST requests.
+3. The server continuously "pushes" an update of the screen over the SSE stream, anytime a resource on the server changes, necessitating a re-render
+4. During this time, the client may be able to interact with the server via buttons etc. These send regular short-lived POST requests.
 
-Notice that the page content is always delivered over the SSE stream that is kept open. The POST endpoints such as `/button-click` usually respond with a `204: no content`.
+Notice that the page content is always delivered over the single SSE stream that is kept open. The POST endpoints such as `/button-click` usually respond with a `204: no content`.
 
 
 
@@ -267,7 +266,7 @@ A simple web server + database might look like this:
               │             │              
               └──────┬──────┘              
                      │                     
-                     │Read/Write           
+                     │ Read/Write          
                      │                     
    ┌─────────────────┴─────────────────┐   
    │                                   │   
@@ -280,7 +279,7 @@ All is well, but if we have many users, traffic increases and our web server run
 
 
 
-## But... We Can Raise an Army of Web Workers. Right?
+## But... We Can Raise an Army of Workers Right?
 To solve this, many web servers provide an option to run multiple workers, which will spawn either threads or processes to run in parallel:
 ```
                                                            
@@ -413,11 +412,11 @@ Alas, we can increase worker count without running into concurrency problems!
 
 
 ## Finally! We can get back to building CRUD
-If all of this sounded like a lot, you are not alone. Luckily,
+If all of this sounded like a lot, you are not alone. Luckily, you can get back to building CRUD in style.
 
-To join a community of like-minded people enthusiastic about performance, consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
+To join a community of like-minded people enthusiastic about performance, databases and hypermedia, consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
 
-That is all! I hope you enjoyed reading this, so now you can get back to building. May your cloud bills be lean and your morphs be fat.
+That is all! I hope you enjoyed reading this. And remember: may your cloud bills be lean and your morphs be fat.
 
 
 
