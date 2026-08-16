@@ -25,8 +25,11 @@
 	<div data-class="{'flex': $_sidePanelOpen, 'hidden': !$_sidePanelOpen}"
 		class="hidden md:flex flex-col w-64 min-w-64 p-2 gap-2 bg-slate-800">
 
-		<h2 class="text-white text-2xl font-audiowide text-center">StarCord</h2>
-
+		<div class="flex flex-row justify-center items-center gap-2">
+			<img src="/static/favicon.png" alt="StarCord logo" style="image-rendering: pixelated; width: 32px; height: 32px;">
+			<h2 class="text-white text-2xl font-audiowide text-center">StarCord</h2>
+		</div>
+		
 		<hr class="text-slate-500">
 
 		<button
@@ -141,8 +144,6 @@
 			<textarea
 				type="text"
 				data-bind:message-send
-				data-indicator:_fetching
-				data-attr:disabled="$_fetching"
 				data-on:keydown="
 					evt.key == 'Enter' && !evt.shiftKey
 					&& (
