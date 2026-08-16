@@ -11,7 +11,7 @@
 	<div class="flex flex-row pb-4 items-center justify-between border-b border-slate-800">
 		<h2 class="text-lg">Open channel</h2>
 		<button
-			data-on:click="$_infoDialogOpen = false"
+			data-on:click="$channelOpen = ''; $_infoDialogOpen = false"
 			class="p-2 rounded-md
 					text-slate-500 hover:text-slate-700 hover:bg-slate-100 hover:cursor-pointer
 					active:ring-2 active:ring-cyan-100 transition duration-150">
@@ -29,10 +29,13 @@
 			<li>2. hyphens</li>
 			<li>3. underscores</li>
 		</ol>
-		<p>May not start with a number or hyphen</p>
+		<p>May only start with a letter or underscore</p>
 		<p>Max. 32 characters</p>
 		<input
 			data-bind:channel-open
+			data-effect__debounce.400ms="
+				$channelOpen;
+				@post('/chat/channel-open/validate')"
 			type="text"
 			minlength="1"
 			maxlength="32"
@@ -43,12 +46,13 @@
 			spellcheck="false"
 			class="p-2 bg-slate-500 rounded-md
 					focus:outline-none focus:ring-2 focus:ring-cyan-100
-					focus:border-transparent transition duration-150"
-		>
+					focus:border-transparent transition duration-150">
+		<p data-text="$_channelOpenError" class="text-red-500"></p>
 	</div>
 
 	<div class="flex flex-row pt-4 justify-evenly items-center gap-3 border-t border-slate-800">
 		<button
+			data-attr:disabled="$_channelOpenError != ''"
 			data-on:click="
 				@post('/chat/channel-open').then(() => (
 					$channelOpen = '',
@@ -57,17 +61,15 @@
 			class="px-6 py-2 min-w-36
 					text-white bg-slate-800 hover:bg-slate-700
 					cursor-pointer outline-none select-none rounded-md
-					active:ring-2 active:ring-cyan-100 transition duration-150"
-		>
+					active:ring-2 active:ring-cyan-100 transition duration-150">
 			Open
 		</button>
 		<button
-			data-on:click="$channelOpen = ''; $_infoDialogOpen = false;"
+			data-on:click="$channelOpen = ''; $_infoDialogOpen = false"
 			class="px-6 py-2 min-w-36
 					text-black bg-slate-500 hover:bg-slate-400
 					cursor-pointer outline-none select-none rounded-md
-					active:ring-2 active:ring-cyan-100 transition duration-150"
-		>
+					active:ring-2 active:ring-cyan-100 transition duration-150">
 			Cancel
 		</button>
 	</div>
