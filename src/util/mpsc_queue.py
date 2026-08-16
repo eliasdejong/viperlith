@@ -5,12 +5,16 @@ from collections.abc import Generator
 import msgspec
 import spsc_ring_threadsafe as srt
 
-from src.config import WORKER_COUNT, QUEUE_SIZES
+from src.config import QUEUE_SIZES
 from src.util.msgpack_enc import msgpack_decoder
 
 
+
+WORKER_COUNT = int(os.getenv("WEB_CONCURRENCY"))
+
 class Q:
 	pass
+
 
 
 def setup():

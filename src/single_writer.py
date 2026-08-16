@@ -5,7 +5,6 @@ from src.util.db_write_con import con
 from src.util.frame_ticks import frame_ticks
 from src.util.mpsc_queue import Q, drain
 import src.util.mpsc_queue as mpsc
-from src.util.db_migration import run_migration
 
 
 
@@ -74,7 +73,6 @@ def writer_tick():
 		)
 
 def run_writer():
-	run_migration()
 	try:
 		mpsc.attach_all()
 		frames = 0

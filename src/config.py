@@ -1,8 +1,6 @@
 import os
 
 
-WORKER_COUNT = max(1, os.cpu_count() - 1) if os.getenv("DEBUG") == "0" else 1
-
 # identifier : size (bytes)
 QUEUE_SIZES = {
 	"user_insert": 4096,
