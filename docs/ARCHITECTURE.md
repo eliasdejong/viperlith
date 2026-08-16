@@ -420,5 +420,10 @@ That is all! I hope you enjoyed reading this. And remember: may your cloud bills
 
 
 
+## LLM Usage Disclosure
+No AI was used whatsoever in any part of this writing.
+
+
+
 [^1]: Postgres' MVCC implementation [has aged quite poorly](https://www.cs.cmu.edu/~pavlo/blog/2023/04/the-part-of-postgresql-we-hate-the-most.html). Long-running transactions can block the autovacuum process, which leaves behind more dead tuples, which in turn slow down transactions in a vicious cycle until the database halts to a crawl.
 [^2]: Shared memory [is the fastest way of communicating between processes](https://chengxin.de/2021/ipc/).
