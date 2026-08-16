@@ -7,9 +7,7 @@ This is a small and opinionated full stack [Datastar](https://data-star.dev/) we
 
 `datastar.js` is a lightweight (11kB) hypermedia framework [similar to HTMX](docs/ARCHITECTURE.md).
 
-Hypermedia-driven applications (HDA), unlike SPA frameworks (e.g. React, Vue, Angular), **eliminate state and logic on the client side**. Instead, interactive logic is moved to the backend and the interface
-
-Page updates are streamed to the client as server-rendered templates over a Server-Sent Events stream and *morphed* into the local DOM.
+Hypermedia-driven applications (HDA), unlike SPA frameworks (e.g. React, Vue, Angular), **eliminate state and logic on the client side**. Instead, interactive logic is moved to the backend and page updates are streamed to the client as server-rendered templates over a Server-Sent Events stream and *morphed* into the local DOM.
 This is a bit like streaming a movie, except the movie is HTML and you receive new content from updates and UI interactions. The client's browser is effectively reduced to a rendering viewport only capable of displaying raw HTML.
 
 
@@ -17,7 +15,7 @@ This is a bit like streaming a movie, except the movie is HTML and you receive n
 ## Architecture
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a full architecture rundown.
 
-The [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
+Also see: [theTao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
 and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_framework).
 
 
