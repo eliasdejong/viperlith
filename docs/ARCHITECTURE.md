@@ -33,14 +33,11 @@ See also: [Why another framework?](https://data-star.dev/essays/why_another_fram
 
 [HTMX](https://htmx.org/) is a great library that inspired many people to reconsider what is possible in web development. However when building large applications with HTMX, it has some inherent complexity that builds over time.
 
-Specifically: HTMX primarily relies on request-response (pull) interactions with partial HTML-fragments "patched" into the DOM. Remember: your API returns HTML not JSON. This means that most interactions consist of "patchwork". Page fragments, requested from the server one at a time, each one returning a server-side rendered (SSR) HTML template.
+For some interactions, like showing a dropdown menu, sending a network request is undesirable. However HTMX provides very little in the way of client-side variables, necessitating additional JavaScript frameworks such as [Alpine.js](https://alpinejs.dev/). While lightweight, these frameworks introduce additional APIs and overhead while [not always playing well with htmx](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431). Datastar instead has **signals** and a lightweight set of [attributes](https://data-star.dev/reference/attributes) to build client-side expressions, meaning another library isn't needed for the majority of use cases.
+
+Great, but there are more fundamental differences: HTMX primarily relies on request-response (pull) interactions with partial HTML-fragments "patched" into the DOM. Remember: your API returns HTML not JSON. This means that most interactions consist of "patchwork". Page fragments, requested from the server one at a time, each one returning a server-side rendered (SSR) HTML template.
 
 HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI consists of patchwork, questions arise; namely, which parts do you update and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which update to send, when?
-
-
-
-## Client-side State in HTMX
-For some interactions, like showing a dropdown menu, sending a network request is undesirable. However HTMX provides very little in the way of client-side variables or interactivity, necessitating additional JavaScript frameworks such as [Alpine.js](https://alpinejs.dev/). While lightweight, these frameworks introduce additional APIs and overhead while [not always playing well with htmx](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431). Datastar instead has *signals* and a [lightweight set of attributes](https://data-star.dev/reference/attributes) to build client-side expressions, meaning another library isn't needed for the majority of use cases.
 
 
 
