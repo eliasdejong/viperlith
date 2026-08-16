@@ -68,13 +68,16 @@ def post_close_channel(request: Request, sid: NamedDependency[str], signals_json
 	srt.put(Q.close_channel, msgpack_encoder.encode(model))
 	return ASGIResponse(status_code=204)
 
-@post("/chat/set-nickname", sync_to_thread=False)
-def post_set_nickname(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
-	model = set_nickname_decoder.decode(signals_json).setNickname
-	model.session_id = sid
-	srt.put(Q.set_nickname, msgpack_encoder.encode(model))
-	return ASGIResponse(status_code=204)
-
+@post("/chat/set-nickname", sync_to_thread=False, status_code=200)
+def post_set_nickname(request: Request, sid: NamedDependency[str], signals_json: Any) -> dict[str, str]:
+	try:
+		model = set_nickname_decoder.decode(signals_json)
+		model.session_id = sid
+		srt.put(Q.set_nickname, msgpack_encoder.encode(model))
+		return {"setNicknameError": ""}
+	except msgspec.ValidationError as e:
+		return {"setNicknameError": "Allowed characters: 'A-Za-z0-9 _-'"}
+	
 router = Router(
 	path="/",
 	route_handlers=[

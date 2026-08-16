@@ -67,7 +67,7 @@ def writer_tick():
 		# Set nicknames
 		con.executemany("""
 			UPDATE users as u
-			set nickname = :nickname
+			set nickname = :setNickname
 			where session_id = :session_id
 			""",
 			drain(Q.set_nickname)

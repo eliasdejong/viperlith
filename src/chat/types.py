@@ -9,7 +9,7 @@ UnixName = Annotated[
 ]
 
 Username = Annotated[
-	str, Meta(min_length=1, max_length=32, pattern="[a-zA-Z0-9_ -]*$")
+	str, Meta(min_length=1, max_length=32, pattern="^[A-Za-z0-9 _-]*$")
 ]
 
 class InsertUser(Struct):
@@ -51,10 +51,7 @@ close_channel_decoder = msgspec.json.Decoder(type=CloseChannelOuter)
 
 
 class SetNickname(Struct):
-	nickname: Username
+	setNickname: Username
 	session_id: str | None = None
 
-class SetNicknameOuter(Struct):
-	setNickname: SetNickname
-
-set_nickname_decoder = msgspec.json.Decoder(type=SetNicknameOuter)
+set_nickname_decoder = msgspec.json.Decoder(type=SetNickname)

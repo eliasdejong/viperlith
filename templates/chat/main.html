@@ -23,7 +23,7 @@
 
 	<!-- Left Panel -->
 	<div data-class="{'flex': $sidePanelOpen, 'hidden': !$sidePanelOpen}"
-		class="hidden md:flex flex-col p-2 gap-2 min-w-64 bg-slate-800">
+		class="hidden md:flex flex-col w-64 p-2 gap-2 bg-slate-800">
 
 		<h2 class="text-white text-2xl font-audiowide text-center">StarCord</h2>
 
@@ -76,11 +76,10 @@
 			{% endfor %}
 		</div>
 
+		
 		<input
-			data-on:change__debounce.400ms="@post('/chat/set-nickname')"
-			data-bind:set-nickname.nickname
-			data-indicator:_fetching
-			data-attr:disabled="$_fetching"
+			data-on:keydown__debounce.400ms="@post('/chat/set-nickname')"
+			data-bind:set-nickname
 			value="{{
 				con.execute(
 					'select nickname from users where session_id = ?',
@@ -99,6 +98,7 @@
 					focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:bg-slate-500
 					focus:border-transparent transition duration-150"
 		>
+		<p data-text="$setNicknameError" class="text-red-500"></p>
 	</div>
 
 	<!-- Messages -->
