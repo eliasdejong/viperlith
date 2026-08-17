@@ -13,9 +13,9 @@ This is a bit like streaming a movie, except the movie is HTML and you receive n
 
 
 ## Architecture
-See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for a full rundown.
+See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for an introduction to the concept of HTML streaming.
 
-Also see: [theTao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
+Also see: [the Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
 and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_framework).
 
 
