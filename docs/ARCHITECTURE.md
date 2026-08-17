@@ -1,6 +1,6 @@
 # Viperlith Architecture: Or Why HTML Streaming is the Future of the Web
 ## Introduction
-`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with a different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client polling with request-response cycles.
+`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with a different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client-side polling with request-response cycles.
 
 Viperlith is a small and opinionated full stack [Datastar](https://data-star.dev/) web application monolith written in Python, encapsulating these ideas. It can be used as a template or reference architecture. A Discord-like chat sample application is currently implemented which allows real-time chat rooms, creating/removing channels and setting nicknames.
 
@@ -41,7 +41,7 @@ HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via
 
 
 
-## Out-of-bounds swap: The Eureka Moment
+## Out-of-Bounds Swap: The Eureka Moment
 Seasoned HTMX developers found a powerful solution: `hx-swap-oob`. The out-of-bound swap: this attribute is almost magical in how well it solves the problem. Here's how it works: Your HTML fragment no longer gets patched into just one place. Normally, you would set an `hx-target="#some-div"`, then the server response would be inserted **exactly there**. However, `hx-swap-oob` turns this around: `hx-target` is completely ignored, and now **the element itself decides where it gets inserted**.
 
 An element like this:
@@ -52,7 +52,7 @@ An element like this:
 ```
 Will replace wherever the `#alerts` element is on the page. Wherever it may be!
 
-When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably they start using it more. So much so, that eventually entire pages consists of elements swapped out-of-bounds. So why exactly is this feature so powerful?
+When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably they start using it more. So much so, that eventually entire pages consist of elements swapped out-of-bounds. So why exactly is this feature so powerful?
 
 The reason has to do with the earlier stated problem: what do you update, and when? First, notice how the server is now in control of which parts of the page get updated: by setting the `id` of the out-of-bounds element, the server can target exactly where the update takes place. Or in other words: **the server controls the view**.
 
@@ -72,7 +72,7 @@ For hypermedia-driven applications:
 
 
 
-## Coming back to `hx-swap-oob`
+## Coming Back to `hx-swap-oob`
 When the server controls the view, it can now do something clever: it can update the stale parts on the screen and ignore the rest. There is no limit to how many `hx-swap-oob` elements can be included in a response; one, two, three, five, or every element on the page. There is no limit.
 
 Previously, your backend needed one API endpoint for every HTML fragment. Now, you just need a single endpoint: `/page/updates`.
@@ -97,18 +97,18 @@ Unfortunately, now another issue comes up: **Performance**.
 
 > Now I have te rebuild my entire page on every tiny change? Are you out of your mind? Do you know what that costs me? Cloud credits don't grow on trees you know?
 
-Datastar was born out of a desire for performance, by someone who was not traditionally a web developer but was forced into web development out of disgust for the ecosystem. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
+Datastar was born out of a desire for performance, by someone who was not traditionally a web developer but was forced into web development partially out of disgust for the ecosystem. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
 
 **Coming up: How CQRS combined with SQLite on local NVMe supercharges your database performance to new heights**
 
-To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Whatever your current interpretation is of Datastar, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html). The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batching transactions and *having only a single writer* (more on that later).
+To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Whatever your current interpretation is of Datastar, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html). The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batching transactions and **having only a single writer** (more on that later).
 
 Full-page rebuilds are faster than you think, provided your database and web server architecture are also fast, which they should be. Keep reading to learn more.
 
 
 
 ## The Magic Sauce: Idiomorph
-We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. If you are scared of full page rebuilds, then close this page and go back to using React.
+We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. If you are scared of doing this, then close this page and go back to using React.
 
 Oh you're still here? So as I was saying, [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm and Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
 
@@ -125,7 +125,7 @@ Remember this:
 - GZip: Compresses only individual responses, discards the compression window on every request
 - Brotli streaming compression over SSE: keeps the compression window for the duration of the stream
 
-An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the *delta* of the page content. Idiomorph ensures we only touch the real DOM where necessary.
+An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the **delta** of the page content. Idiomorph ensures we only touch the real DOM where necessary.
 
 This brings us to...
 
@@ -195,7 +195,7 @@ In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fa
 
 However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware became more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
 
-Consider that many of the most performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized through decades of engineering and are written in native languages such as C++, compiled for the target hardware. At its core, the browser is an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it is not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize other work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
+Consider that many of the more performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized through decades of engineering and are written in native languages such as C++, compiled for the target hardware. At its core, the browser is an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it is not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize other work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
 
 
 
@@ -230,9 +230,9 @@ Here is the mandatory client-server diagram, with the server on top:
 Having the ability to render any HTML through templates, what do we need state on the client for? We can keep all state in the backend and simply send down the declarative HTML for what the client is supposed to see at any given moment over SSE. This drastically simplifies the picture on the client.
 
 To give an idea for the sequence of events:
-1. The client connects for the first time, requesting the stream via `/updates`
-2. The server responds with the `text/event-stream` response type, and `Connection: Keep-Alive`, meaning the connection stays open
-3. The server continuously "pushes" an update of the screen over the SSE stream, anytime a resource on the server changes, necessitating a re-render
+1. The client connects for the first time, requesting the stream via `/updates`.
+2. The server responds with the `text/event-stream` response type, and `Connection: Keep-Alive`, meaning the connection stays open.
+3. The server continuously "pushes" an update of the screen over the SSE stream, anytime a resource on the server changes, necessitating a re-render.
 4. During this time, the client may be able to interact with the server via buttons etc. These send regular short-lived POST requests.
 
 Notice that the page content is always delivered over the single SSE stream that is kept open. The POST endpoints such as `/button-click` usually respond with a `204: no content`.
@@ -294,7 +294,7 @@ To solve this, many web servers provide an option to run multiple workers, which
    │ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ │   
    └────────│────────────────│────────────────│────────┘   
             │                │                │            
-            │Read/Write      │Read/Write      │Read/Write  
+            │ Read/Write     │ Read/Write     │ Read/Write 
             │                │                │            
    ┌────────┴────────────────┴────────────────┴────────┐   
    │                                                   │   
@@ -360,7 +360,7 @@ We will make a big change: web workers are themselves not allowed to write to th
 
 A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves **DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
 
-This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes are batched for maximum throughput while still being fully serialized & ACID. The single-writer will drain the queues and process commands on a fixed frame rate / interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
+This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes can be batched for maximum throughput while still being fully serialized & ACID. The single-writer drains the queues and processes commands on a fixed frame rate i.e. interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
 However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2]:
 ```
@@ -379,7 +379,7 @@ However, since each worker lives inside its own process, by default, they have n
    │           │           │    │ └──────┬──────┘  └──────┬──────┘  └──────┬──────┘ │   
    └───────────│───────────┘    └────────│────────────────│────────────────│────────┘   
                │                         │                │                │            
-               │Read/Write               │Read            │Read            │Read        
+               │ Read/Write              │ Read           │ Read           │ Read       
                │                         │                │                │            
    ┌───────────┴─────────────────────────┴────────────────┴────────────────┴────────┐   
    │                                                                                │   
@@ -397,7 +397,7 @@ A typical interaction cycle goes like this:
 6. Single-writer commits a write-transaction to the database
 7. The write becomes visible to all workers
 8. The worker holding the SSE stream to the client re-renders the page, based on the new database state
-9. Client receives the new page and Datastar morphs it into their local DOM
+9. Client receives the new page content and Datastar morphs it into their local DOM
 10. Client sees the updated page
 
 We now have obtained the following features:
