@@ -1,6 +1,6 @@
 # Viperlith Architecture: Or Why HTML Streaming is the Future of the Web
 ## Introduction
-`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client polling with request-response cycles.
+`datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with a different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client polling with request-response cycles.
 
 Viperlith is a small and opinionated full stack [Datastar](https://data-star.dev/) web application monolith written in Python, encapsulating these ideas. It can be used as a template or reference architecture. A Discord-like chat sample application is currently implemented which allows real-time chat rooms, creating/removing channels and setting nicknames.
 
@@ -41,10 +41,10 @@ HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via
 
 
 
-## Out-of-bounds swap: The eureka moment
-Seasoned HTMX developers found a powerful solution: `hx-swap-oob`. The out-of-bound swap: this attribute is almost magical in how well it solves the problem. Here's how it works: Your HTML fragment no longer gets "patched" into just one place. Normally, you would set an `hx-target="#some-div"`, then the server response would be inserted **exactly there**. However, `hx-swap-oob` turns this around: `hx-target` is completely ignored, and the now **element itself decides where it gets inserted**.
+## Out-of-bounds swap: The Eureka Moment
+Seasoned HTMX developers found a powerful solution: `hx-swap-oob`. The out-of-bound swap: this attribute is almost magical in how well it solves the problem. Here's how it works: Your HTML fragment no longer gets patched into just one place. Normally, you would set an `hx-target="#some-div"`, then the server response would be inserted **exactly there**. However, `hx-swap-oob` turns this around: `hx-target` is completely ignored, and now **the element itself decides where it gets inserted**.
 
-A fragment like this:
+An element like this:
 ```html
 <div id="alerts" hx-swap-oob="true">
     Saved!
@@ -52,7 +52,7 @@ A fragment like this:
 ```
 Will replace wherever the `#alerts` element is on the page. Wherever it may be!
 
-When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably the use of it goes up. So much so, that eventually entire pages consists of elements swapped out-of-bounds. So why exactly is this feature so powerful?
+When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably they start using it more. So much so, that eventually entire pages consists of elements swapped out-of-bounds. So why exactly is this feature so powerful?
 
 The reason has to do with the earlier stated problem: what do you update, and when? First, notice how the server is now in control of which parts of the page get updated: by setting the `id` of the out-of-bounds element, the server can target exactly where the update takes place. Or in other words: **the server controls the view**.
 
@@ -86,11 +86,11 @@ In Datastar, responses are always out-of-band by default. For many HTMX users, t
 
 **And this is by design**: HTML is just a declarative markup of whatever should currently be displayed on the screen. It does not control the view, **because the server controls the view**.
 
-Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190). However, extending this concept: Datastar encourages something more radical: **to swap the entire page at once**. Finally, no more fragments. No more partials. Every. Request. Rebuilds. The entire page. The entire page will be constructed from a single `render()` call on the backend.
+Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190). However, extending this concept: Datastar encourages something more radical: **to swap the entire page at once**. Finally, no more fragments. No more partials. Every. Request. Rebuilds. The. Entire. Page; from a single `render()` call on the backend.
 
 
 
-## Full Page Rebuilds? Not in My Backyard
+## Full Page Rebuilds? No Way
 Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. Full-page rebuilding eliminates most of these problems. Because everytime you rebuild, you are up to date. No ifs or buts.
 
 Unfortunately, now another issue comes up: **Performance**.
@@ -108,9 +108,9 @@ Full-page rebuilds are faster than you think, provided your database and web ser
 
 
 ## The Magic Sauce: Idiomorph
-We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. Can we confidently assert that you should not use inferior approaches for performance reasons. If that is the case, close this page and go back to React.
+We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. If you are scared of full page rebuilds, then close this page and go back to using React.
 
-Oh you're still here. So as I was saying, [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm and Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
+Oh you're still here? So as I was saying, [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm and Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
 
 Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. The server can send the **entire page** at once (known as a "fat morph"), and the algorithm on the client will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`view = f(state)` aka `html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
 
@@ -171,7 +171,7 @@ Datastar encourages a "push" model with full-page rebuilds similar to [immediate
 ## Why not web sockets?
 In practice, web sockets are a rarely a good choice. HTTP handles a lot functionality "for free" (compression, stateful connections, multiplexing, etc.), all natively in the browser (in C++). But with web sockets, applications must handle all of that themselves on the main thread in JavaScript. This is not only a lot overhead to manage yourself, but it also competes with everything in JavaScript performance-wise.
 
-The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's a dead end and it's not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
+The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's a dead end and not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
 
 Oh and finally, HTTP traffic has a lot lower chance of getting intercepted by some corporate firewalls. Details like that can be very annoying when you run into them.
 
@@ -184,18 +184,18 @@ The [htmx essays](https://htmx.org/essays/) have done most of the work already a
 
 ### Client-side state management
 One of the more complex ongoing problems in the SPA world is the management client-side state. Many solutions exists (Redux, Zustand, React Router).
-Hypermedia-driven applications deal with this problem cleverly: **by eliminating client-side state** (and moving it to the backend). Without client-side state, there is no need to manage it. [Incredible!](https://i.giphy.com/1pA2TskF33668iVDaW.webp) For the vast majority of application web client never "owns" the state of a resource. Instead, the server owns the state, and the client sees a view.
+Hypermedia-driven applications deal with this problem cleverly: **by eliminating client-side state** (and moving it to the backend). Without client-side state, there is no need to manage it. [Incredible!](https://i.giphy.com/1pA2TskF33668iVDaW.webp) For the vast majority of applications, a web client never "owns" the state of a resource. Instead, the server owns the state, and the client sees a view.
 
-Of course, not all client-side state can be eliminated. Some of it is necessary, such as user inputs, scroll position etc. Also, some state is considered *trivial*, meaning it does not affect anything meaningful. For example, whether dark mode is enabled or whether a dropdown menu is opened are mostly client-side visual artifacts that do not concern the server.
+Of course, not all client-side state can be eliminated. Some of it is necessary, such as user inputs, scroll position etc. Also, some state is considered *trivial*, meaning it does not affect anything meaningful. For example, whether dark mode is enabled or a dropdown menu is opened are mostly client-side visual artifacts that do not concern the server.
 
 The result of eliminating client-side state is that the browser becomes a "dumb" viewport or terminal, capable only of displaying HTML.
 
 ### Obsoleting of the Virtual DOM
 In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating of table data, because browsers at the time struggled with this, especially on low-end client hardware.
 
-However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware has become more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
+However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware became more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
 
-Consider that many of the most performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized over decades of engineering, and are written in native languages such as C++, compiled for the target hardware. The browser is at its core an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it's not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where the rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize the bulk of the work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
+Consider that many of the most performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized through decades of engineering and are written in native languages such as C++, compiled for the target hardware. At its core, the browser is an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it is not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize other work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
 
 
 
@@ -412,9 +412,9 @@ Alas, we can increase worker count without running into concurrency problems!
 
 
 ## Finally! We can get back to building CRUD
-If all of this sounded like a lot, you are not alone. Luckily, you can get back to building CRUD in style.
+If all of this sounded like a lot, you are not alone. Luckily, you can now get back to building CRUD in style.
 
-To join a community of like-minded people enthusiastic about performance, databases and hypermedia, consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
+To join a community of like-minded people enthusiastic about web, hypermedia, performance and databases consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
 
 That is all! I hope you enjoyed reading this. And remember: may your cloud bills be lean and your morphs be fat.
 
