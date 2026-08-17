@@ -84,6 +84,7 @@
 		<input
 			data-on:input__debounce.400ms="@post('/chat/nickname-set')"
 			data-bind:nickname-set
+			data-ignore-morph
 			value="{{
 				con.execute(
 					'select nickname from users where session_id = ?',
@@ -141,7 +142,6 @@
 
 		<div class="p-2 flex justify-center items-center">
 			<textarea
-				type="text"
 				data-bind:message-send
 				data-on:keydown="
 					evt.key == 'Enter' && !evt.shiftKey
@@ -150,6 +150,8 @@
 						el.value != ''
 						&& @post('/chat/message-send').then(() => (el.value = '', el.focus()))
 					)"
+				data-ignore-morph
+				type="text"
 				placeholder="Type your message..."
 				autocapitalize="off"
 				autocomplete="off"
