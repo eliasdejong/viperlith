@@ -173,8 +173,6 @@ In practice, web sockets are a rarely a good choice. HTTP handles a lot function
 
 The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's a dead end and not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
 
-Oh and finally, HTTP traffic has a lot lower chance of getting intercepted by some corporate firewalls. Details like that can be very annoying when you run into them.
-
 
 
 ## Just use HTML
@@ -193,9 +191,9 @@ The result of eliminating client-side state is that the browser becomes a "dumb"
 ### Obsoleting of the Virtual DOM
 In the SPA world, the "virtual DOM" or "vdom" *Raison d'être* was to support fast dynamic page updates such as real-time updating of table data, because browsers at the time struggled with this, especially on low-end client hardware.
 
-However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds have improved dramatically while hardware became more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
+However, a lot has changed since 2013 and browsers have become a lot more capable. Meanwhile, internet speeds improved dramatically while hardware became more powerful. We can now rely on the **real DOM** to represent and update the page directly, without recreating the world in JavaScript. That is of course, given that we do not apply updates naively. Thanks to approaches like Idiomorph, this is now a solved problem.
 
-Consider that many of the more performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized through decades of engineering and are written in native languages such as C++, compiled for the target hardware. At its core, the browser is an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language running in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it is not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize other work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
+Consider that many of the more performance-sensitive routines in the browser (parsing HTML, layout engine, font sizing, etc.) are highly optimized through decades of engineering and are written in native languages such as C++, compiled for the target hardware. At its core, the browser is an engine purpose-built to render HTML. Meanwhile, JavaScript is a scripting language in a JIT runtime demanding high amounts of memory and startup times. Thanks to billions of dollars of investment by parties like Google, it is not as slow anymore as it once was. However, it will always be slower than native code. Also, the single-threaded model of JavaScript where rendering blocks the main thread and vice-versa has aged especially poorly into the multi-core era. Meanwhile, the browser is taking full advantage of multithreading to parallelize other work. Let's lean into that if we can, ok? Trying to beat the browser's native code in a scripting language is, well, an uphill battle at the very least.
 
 
 
