@@ -1,4 +1,4 @@
-# Viperlith Architecture: Or Why HTML Streaming is the Future of the Web
+# Why HTML Streaming is the Future of the Web
 ## Introduction
 `datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with a different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client-side polling with request-response cycles.
 
