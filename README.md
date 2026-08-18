@@ -23,11 +23,12 @@ and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_
 ## The Stack
 Viperlith consists of the following components:
 1. [Litestar ASGI framework](https://litestar.dev/): Uses up to [10x less memory as compared to FastAPI](https://github.com/kunesj/fastapi-litestar-memory-benchmark).
-2. [MsgSpec](https://msgspec.dev/): [Pydantic data validation](https://pydantic.dev/docs/validation/latest/get-started/) consumes a lot of memory. MsgSpec provides the same validation capabilities while [serializing an order of magnitude faster](https://msgspec.dev/benchmarks).
-3. SQLite through [APSW](https://github.com/rogerbinns/apsw): Local SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides better control, features and error handling compared to Python's builtin `sqlite3` module.
-4. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
-5. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
-6. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
+2. [uvicorn](https://uvicorn.dev/): Popular ASGI web server
+3. [MsgSpec](https://msgspec.dev/): [Pydantic data validation](https://pydantic.dev/docs/validation/latest/get-started/) consumes a lot of memory. MsgSpec provides the same validation capabilities while [serializing an order of magnitude faster](https://msgspec.dev/benchmarks).
+4. SQLite through [APSW](https://github.com/rogerbinns/apsw): Local SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides better control, features and error handling compared to Python's builtin `sqlite3` module.
+5. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
+6. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
+7. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
 
 
 
