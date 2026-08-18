@@ -3,7 +3,7 @@ from typing import Any
 from litestar import Router, get, post
 from litestar.di import NamedDependency
 from litestar.connection import Request
-from litestar.response import Response, Stream
+from litestar.response import Stream
 from litestar.response.base import ASGIResponse
 
 import msgspec
@@ -25,14 +25,10 @@ def render(sid: str) -> str:
 		ret = t.render(con=con, sid=sid)
 	return ret
 
-@get("/", sync_to_thread=False)
-def get_root(request: Request, sid: NamedDependency[str]) -> Response:
+@get("/", sync_to_thread=False, media_type="text/html")
+def get_root(request: Request, sid: NamedDependency[str]) -> str:
 	t = templates.get_template("base.html")
-	html = t.render(body=render(sid), updates_url="/chat/updates")
-	return Response(
-		content=html,
-		media_type="text/html",
-	)
+	return t.render(body=render(sid), updates_url="/chat/updates")
 
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
