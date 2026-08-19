@@ -83,14 +83,13 @@
 		
 		<input
 			data-on:input__debounce.400ms="@post('/chat/nickname-set')"
-			data-bind:nickname-set
-			data-ignore-morph
-			value="{{
+			data-signals:nickname-set__ifmissing="'{{
 				con.execute(
 					'select nickname from users where session_id = ?',
 					(sid,)
 				).fetchone()[0]
-			}}"
+			}}'"
+			data-bind:nickname-set
 			type="text"
 			minlength="1"
 			maxlength="32"
@@ -150,7 +149,6 @@
 						el.value != ''
 						&& @post('/chat/message-send').then(() => (el.value = '', el.focus()))
 					)"
-				data-ignore-morph
 				type="text"
 				placeholder="Type your message..."
 				autocapitalize="off"
