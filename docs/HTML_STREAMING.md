@@ -103,7 +103,7 @@ Datastar was born out of a desire for performance, by someone who was not tradit
 
 To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Whatever your current interpretation is of Datastar, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html). The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batching transactions and **having only a single writer** (more on that later).
 
-Full-page rebuilds are faster than you think, provided your database and web server architecture are also fast, which they should be. Keep reading to learn more.
+Full-page rebuilds are faster than you think, provided your database and web server architecture are also fast, which they should be.
 
 
 
@@ -317,7 +317,7 @@ The database has to ensure that each query sees a consistent, isolated view of t
 
 From the user's perspective, it "just works" and the database seems to handle it fine. However, maintaining strong ACID guarantees does not come for free. Most databases hold **locks** when a particular piece of data is being modified. While the lock is held, **no other query can modify the same data protected by the lock**. This locking can lead to **contention** and performance problems under load.
 
-Counter to popular belief, Postgres is **not ACID by default**. The default isolation level in Postgres 'read committed', which [allows for serialization anomalies, phantom reads and nonrepeatable reads](https://www.postgresql.org/docs/current/transaction-iso.html). To solve this problem, the isolation level must be set to 'serializable', however the documentation warns that:
+Counter to popular belief, **Postgres is not ACID by default**. The default isolation level in Postgres 'read committed', which [allows for serialization anomalies, phantom reads and nonrepeatable reads](https://www.postgresql.org/docs/current/transaction-iso.html). To solve this problem, the isolation level must be set to 'serializable', however the documentation warns that:
 
 > "applications using this level must be prepared to retry transactions due to serialization failures"
 
