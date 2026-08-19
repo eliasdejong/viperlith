@@ -4,7 +4,6 @@ from litestar import Router, get, post
 from litestar.di import NamedDependency
 from litestar.connection import Request
 from litestar.response import Stream
-from litestar.response.base import ASGIResponse
 
 import msgspec
 import spsc_ring_threadsafe as srt
@@ -19,7 +18,7 @@ from src.chat.types import *
 
 
 
-def render(sid: str) -> str:
+def _render(sid: str) -> str:
 	t = templates.get_template("chat/main.html")
 	with con:
 		ret = t.render(con=con, sid=sid)
@@ -28,14 +27,14 @@ def render(sid: str) -> str:
 @get("/", sync_to_thread=False, media_type="text/html")
 def get_root(request: Request, sid: NamedDependency[str]) -> str:
 	t = templates.get_template("base.html")
-	return t.render(body=render(sid), updates_url="/chat/updates")
+	return t.render(body=_render(sid), updates_url="/chat/updates")
 
 @get("/chat/updates")
 async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 	model = UserInsert(session_id=sid)
 	srt.put(Q.user_insert, msgpack_encoder.encode(model))
 	return Stream(
-		content=sse_generator(render, sid),
+		content=sse_generator(_render, sid),
 		media_type="text/event-stream",
 		headers={
 			"Cache-Control": "no-cache",
@@ -43,19 +42,17 @@ async def get_updates(request: Request, sid: NamedDependency[str]) -> Stream:
 		}
 	)
 
-@post("/chat/message-send", sync_to_thread=False)
-def post_msg_send(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+@post("/chat/message-send", sync_to_thread=False, status_code=204)
+def post_msg_send(request: Request, sid: NamedDependency[str], signals_json: Any) -> None:
 	model = msg_send_decoder.decode(signals_json)
 	model.session_id = sid
 	srt.put(Q.msg_send, msgpack_encoder.encode(model))
-	return ASGIResponse(status_code=204)
 
-@post("/chat/channel-open", sync_to_thread=False)
-def post_channel_open(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+@post("/chat/channel-open", sync_to_thread=False, status_code=204)
+def post_channel_open(request: Request, sid: NamedDependency[str], signals_json: Any) -> None:
 	model = channel_open_decoder.decode(signals_json)
 	model.session_id = sid
 	srt.put(Q.channel_open, msgpack_encoder.encode(model))
-	return ASGIResponse(status_code=204)
 
 @post("/chat/channel-open/validate", sync_to_thread=False, status_code=200)
 def post_channel_open_validate(request: Request, signals_json: Any) -> dict[str, str]:
@@ -65,12 +62,11 @@ def post_channel_open_validate(request: Request, signals_json: Any) -> dict[str,
 	except msgspec.ValidationError as e:
 		return {"_channelOpenError": "Invalid channel name"}
 
-@post("/chat/channel-close", sync_to_thread=False)
-def post_channel_close(request: Request, sid: NamedDependency[str], signals_json: Any) -> ASGIResponse:
+@post("/chat/channel-close", sync_to_thread=False, status_code=204)
+def post_channel_close(request: Request, sid: NamedDependency[str], signals_json: Any) -> None:
 	model = channel_close_decoder.decode(signals_json)
 	model.session_id = sid
 	srt.put(Q.channel_close, msgpack_encoder.encode(model))
-	return ASGIResponse(status_code=204)
 
 @post("/chat/nickname-set", sync_to_thread=False, status_code=200)
 def post_nickname_set(request: Request, sid: NamedDependency[str], signals_json: Any) -> dict[str, str]:
