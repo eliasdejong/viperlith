@@ -1,7 +1,9 @@
 import os
 import apsw
+apsw.mapping_config = {"SQLITE_CONFIG_MEMSTATUS": 0}
 import apsw.bestpractice
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
+
 
 
 con = apsw.Connection(
