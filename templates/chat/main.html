@@ -81,27 +81,29 @@
 
 		<!-- <pre data-json-signals class="text-white"></pre> -->
 		
-		<input
-			data-on:input__debounce.400ms="@post('/chat/nickname-set')"
-			data-signals:nickname-set__ifmissing="'{{
-				con.execute(
-					'select nickname from users where session_id = ?',
-					(sid,)
-				).fetchone()[0]
-			}}'"
-			data-bind:nickname-set
-			type="text"
-			minlength="1"
-			maxlength="32"
-			placeholder="nickname"
-			autocapitalize="off"
-			autocomplete="off"
-			autocorrect="off"
-			spellcheck="false"
-			class="p-2 mt-auto bg-slate-700 rounded-md
-					focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:bg-slate-500
-					focus:border-transparent transition duration-150">
-		<p data-text="$_nicknameSetError" class="text-red-500"></p>
+		{% set nickname = con.execute(
+				'select nickname from users where session_id = ?',
+				(sid,)
+			).fetchone()[0]
+		%}
+		{% if nickname %}
+			<input
+				data-on:input__debounce.400ms="@post('/chat/nickname-set')"
+				data-signals:nickname-set__ifmissing="'{{ nickname }}'"
+				data-bind:nickname-set
+				type="text"
+				minlength="1"
+				maxlength="32"
+				placeholder="nickname"
+				autocapitalize="off"
+				autocomplete="off"
+				autocorrect="off"
+				spellcheck="false"
+				class="p-2 mt-auto bg-slate-700 rounded-md
+						focus:outline-none focus:ring-2 focus:ring-cyan-100 focus:bg-slate-500
+						focus:border-transparent transition duration-150">
+			<p data-text="$_nicknameSetError" class="text-red-500"></p>
+		{% endif %}
 	</div>
 
 	<!-- Messages -->
