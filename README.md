@@ -13,17 +13,6 @@ A Discord-like chat sample application is currently implemented with real-time c
 
 
 
-## Architecture
-Hypermedia-driven applications (HDA), unlike SPA frameworks (e.g. React, Vue, Angular), **eliminate state and logic on the client side**. Instead, interactive logic is moved to the backend and page updates are streamed to the client as server-rendered templates over a Server-Sent Events stream and *morphed* into the local DOM.
-This is a bit like streaming a movie, except the movie is HTML and you receive new content from updates and UI interactions. The client's browser is effectively reduced to a rendering viewport only capable of displaying raw HTML.
-
-See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for an introduction to the concept of HTML streaming.
-
-Also see: [the Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
-and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_framework).
-
-
-
 ## The Stack
 Viperlith consists of the following components:
 1. [Litestar ASGI framework](https://litestar.dev/): Uses up to [10x less memory as compared to FastAPI](https://github.com/kunesj/fastapi-litestar-memory-benchmark).
@@ -33,6 +22,17 @@ Viperlith consists of the following components:
 5. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
 6. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
 7. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
+
+
+
+## Architecture
+Hypermedia-driven applications (HDA), unlike SPA frameworks (e.g. React, Vue, Angular), **eliminate state and logic on the client side**. Instead, interactive logic is moved to the backend and page updates are streamed to the client as server-rendered templates over a Server-Sent Events stream and *morphed* into the local DOM.
+This is a bit like streaming a movie, except the movie is HTML and you receive new content from updates and UI interactions. The client's browser is effectively reduced to a rendering viewport only capable of displaying raw HTML.
+
+See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for a diagram of Viperlith's CQRS architecture and an introduction to the concept of HTML streaming.
+
+Also see: [the Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
+and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_framework).
 
 
 
