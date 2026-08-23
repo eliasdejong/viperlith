@@ -176,9 +176,9 @@ The author of Datastar has done just about everything to make web sockets work, 
 
 
 ## Just use HTML
-<img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="675">
-
 The [htmx essays](https://htmx.org/essays/) have done most of the work already and you should not need convincing on this. But anyways, here we go.
+
+<img src="images/just_use_html_meme.jpg" alt="Just use HTML bell curve meme" width="675">
 
 ### Client-side state management
 One of the more complex ongoing problems in the SPA world is the management client-side state. Many solutions exists (Redux, Zustand, React Router).
@@ -360,7 +360,7 @@ A "command" in this case means an "event to be processed by the single-writer". 
 
 This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes can be batched for maximum throughput while still being fully serialized & ACID. The single-writer drains the queues and processes commands on a fixed frame rate i.e. interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
-However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2]:
+However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2] to enable inter-process communication. Viperlith uses my lockless ring buffer C extension which is [100x faster than the standard library's `multiprocessing.Queue`](https://pypi.org/project/spsc-ring-threadsafe/).
 ```
                                                                                         
                                Viperlith CQRS Architecture                              
