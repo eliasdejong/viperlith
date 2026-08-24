@@ -77,3 +77,6 @@ def drain(q_list: list[memoryview]) -> Generator[bytes, None, None]:
 				yield msgpack_decoder.decode(srt.get(ring))
 			except srt.QueueEmptyError:
 				break
+
+if __name__ == "__main__":
+	setup()
