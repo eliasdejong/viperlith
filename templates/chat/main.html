@@ -108,8 +108,9 @@
 
 	<!-- Messages -->
 	<div class="flex flex-col flex-grow">
-		<div class="flex flex-col flex-grow items-stretch
+		<div class="flex flex-col-reverse flex-grow items-stretch
 					min-h-0 overflow-y-auto">
+			<div data-init="el.scrollIntoView()" style="overflow-anchor: auto; min-height: 1px;"></div>
 			{% for i in con.execute("""
 				select
 					u.nickname,
@@ -118,8 +119,8 @@
 				from messages m
 				join users u on u.id = m.user_id
 				where m.channel_id = (select current_channel_id from users where session_id = ?)
-				order by m.created_ts, m.id
-				limit 2500
+				order by m.created_ts DESC, m.id
+				limit 500
 				""",
 				(sid,)
 			) %}
@@ -135,8 +136,6 @@
 					<p class="break-all">{{ i[1] }}</p>
 				</div>
 			{% endfor %}
-			<div data-init="el.scrollIntoView()"></div>
-			<div id="scroll-anchor" style="overflow-anchor: auto; min-height: 1px;"></div>
 		</div>
 
 		<hr class="text-slate-500">
