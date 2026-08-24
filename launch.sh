@@ -7,8 +7,8 @@ export PYTHONPATH=.
 export DEBUG="${DEBUG:-1}"
 export WEB_CONCURRENCY=$(( DEBUG == 1 ? 1 : $(nproc) - 1 ))
 
-uv run python -c "from src.util.db_migration import run_migration; run_migration()"
-uv run python -c "from src.util.mpsc_queue import setup; setup()"
+uv run src/util/db_migration.py
+uv run src/util/mpsc_queue.py
 
 if [ "$DEBUG" -eq 1 ]; then
 	uv run watchfiles "python src/single_writer.py" . &
