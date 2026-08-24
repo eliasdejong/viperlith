@@ -20,7 +20,7 @@ import src.util.mpsc_queue as mpsc
 session_config = CookieBackendConfig(
 	secret=base64.b64decode(os.getenv("SESSION_KEY"))
 )
-rate_limit_config = RateLimitConfig(rate_limit=("second", 20))
+# rate_limit_config = RateLimitConfig(rate_limit=("second", 20))
 # rate_limit_config = RateLimitConfig(rate_limit=("second", 5))
 
 @asynccontextmanager
@@ -37,7 +37,8 @@ app = Litestar(
 		create_static_files_router(path="/static", directories=["static"]),
 	],
 	lifespan=[lifespan],
-	middleware=[session_config.middleware, rate_limit_config.middleware],
+	# middleware=[session_config.middleware, rate_limit_config.middleware],
+	middleware=[session_config.middleware],
 	compression_config=CompressionConfig(
 		backend="brotli",
 		minimum_size=500,
