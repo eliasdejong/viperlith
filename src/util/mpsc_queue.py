@@ -11,6 +11,7 @@ from src.util.msgpack_enc import msgpack_decoder
 
 
 WORKER_COUNT = int(os.getenv("WEB_CONCURRENCY"))
+SHM_PATH_PREFIX = os.getenv("SHM_PATH_PREFIX")
 
 class Q:
 	pass
@@ -18,13 +19,13 @@ class Q:
 
 
 def setup():
-	for path in glob.glob(os.getenv("SHM_PATH_PREFIX") + "*"):
+	for path in glob.glob(SHM_PATH_PREFIX + "*"):
 		try:
 			os.remove(path)	# clear any previous mappings
 		except FileNotFoundError:
 			pass
 	for i in range(WORKER_COUNT):
-		path = os.getenv("SHM_PATH_PREFIX") + str(i)
+		path = SHM_PATH_PREFIX + str(i)
 		shm_size = sum(QUEUE_SIZES.values())
 		fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
 		os.ftruncate(fd, shm_size)
@@ -34,7 +35,7 @@ def setup():
 def attach_all():
 	q_dict = defaultdict(list)
 	for i in range(WORKER_COUNT):
-		path = os.getenv("SHM_PATH_PREFIX") + str(i)
+		path = SHM_PATH_PREFIX + str(i)
 		fd = os.open(path, os.O_RDWR)
 		shm_size = sum(QUEUE_SIZES.values())
 		m = mmap.mmap(fd, shm_size)
@@ -50,7 +51,7 @@ def attach_all():
 def claim():
 	fd = None
 	for i in range(WORKER_COUNT):
-		path = os.getenv("SHM_PATH_PREFIX") + str(i)
+		path = SHM_PATH_PREFIX + str(i)
 		try:
 			fd = os.open(path, os.O_RDWR)
 			fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
