@@ -7,6 +7,5 @@ templates = Environment(
 	trim_blocks=True,
 	lstrip_blocks=True,
 	auto_reload=os.getenv("DEBUG") == "1",
-	cache_size=400,
 	autoescape=select_autoescape(),
 )
