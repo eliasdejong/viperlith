@@ -3,10 +3,10 @@ from uuid import UUID, uuid4
 from litestar import Request
 
 
-if "SIMULATED_SESSION_COUNT_MAX" in os.environ:
-	SIMULATED_SESSION_COUNT_MAX = int(os.getenv("SIMULATED_SESSION_COUNT_MAX"))
+if "SIMULATED_SESSION_COUNT" in os.environ:
+	SIMULATED_SESSION_COUNT = int(os.getenv("SIMULATED_SESSION_COUNT"))
 	def get_session_id() -> str:
-		return f"s_{random.randint(1, SIMULATED_SESSION_COUNT_MAX):08d}"
+		return f"s_{random.randint(1, SIMULATED_SESSION_COUNT):08d}"
 else:
 	def get_session_id(request: Request) -> str:
 		try:
