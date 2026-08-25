@@ -21,14 +21,15 @@ local function zipf_rank(count, alpha)
 end
 
 local C = {
-	read_pct = envn("WRK_READ_PCT", 100),
+	read_pct = envn("BENCH_READ_PCT", 100),
+	bench_skew = envn("BENCH_SKEW", 0.1), -- Controls how concentrated message writes are over logical channels.
+
 	msg_size_min = envn("WRK_MESSAGE_SIZE_MIN", 1),
 	msg_size_max = envn("WRK_MESSAGE_SIZE_MAX", 127),
 
 	seed_channel_count = tonumber(os.getenv("SEED_CHANNEL_COUNT")),
 	seed_user_count = tonumber(os.getenv("SEED_USER_COUNT")),
 	seed_msg_count = tonumber(os.getenv("SEED_MSG_COUNT")),
-	seed_current_channel_concentration = tonumber(os.getenv("SEED_CURRENT_CHANNEL_CONCENTRATION")),
 }
 
 local fmt, random, rep = string.format, math.random, string.rep
@@ -60,7 +61,7 @@ function request()
 			signals = '{"messageSend":"' .. rep("a", msg_size) .. '"}'
 		elseif roll <= 90 then
 			url = "/chat/channel-open"
-			signals = '{"channelOpen":"' .. fmt("c_%08d", zipf_rank(C.seed_channel_count, C.seed_current_channel_concentration)) .. '"}'
+			signals = '{"channelOpen":"' .. fmt("c_%08d", zipf_rank(C.seed_channel_count, C.bench_skew)) .. '"}'
 		else
 			url = "/chat/nickname-set"
 			signals = '{"nicknameSet":"' .. fmt("u_%08d", random(C.seed_user_count)) .. '"}'

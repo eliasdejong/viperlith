@@ -7,7 +7,7 @@ from src.util.db_migration import run_migration
 SEED_CHANNEL_COUNT =	int(os.getenv("SEED_CHANNEL_COUNT"))
 SEED_USER_COUNT =		int(os.getenv("SEED_USER_COUNT"))
 SEED_MSG_COUNT =		int(os.getenv("SEED_MSG_COUNT"))
-SEED_CURRENT_CHANNEL_CONCENTRATION = float(os.getenv("SEED_CURRENT_CHANNEL_CONCENTRATION"))
+SEED_BENCH_SKEW = 		float(os.getenv("BENCH_SKEW"))
 
 SEED_MSG_SIZE_MASK = 127
 
@@ -22,7 +22,7 @@ assert (
 ), "SEED_USER_COUNT must be a power of two"
 
 assert SEED_MSG_COUNT >= 0
-assert 0.0 <= SEED_CURRENT_CHANNEL_CONCENTRATION < 1.0
+assert 0.0 <= SEED_BENCH_SKEW < 1.0
 
 MASK64 = (1 << 64) - 1
 
@@ -77,7 +77,7 @@ def seed():
 					zipf_rank(
 						user_id ^ 0x6fd8b0befdacc77a,
 						SEED_CHANNEL_COUNT,
-						SEED_CURRENT_CHANNEL_CONCENTRATION,
+						SEED_BENCH_SKEW,
 					),
 				) for user_id in range(1, SEED_USER_COUNT + 1)
 			)
@@ -91,7 +91,7 @@ def seed():
 			current_channel_id = zipf_rank(
 				user_id ^ 0x6fd8b0befdacc77a,
 				SEED_CHANNEL_COUNT,
-				SEED_CURRENT_CHANNEL_CONCENTRATION,
+				SEED_BENCH_SKEW,
 			)
 			for offset in range(4):
 				yield (
@@ -120,7 +120,7 @@ def seed():
 			channel_id = zipf_rank(
 				g ^ 0xa581c28479563caa,
 				SEED_CHANNEL_COUNT,
-				SEED_CURRENT_CHANNEL_CONCENTRATION,
+				SEED_BENCH_SKEW,
 			)
 			user_id = 1 + (mix64(g ^ 0xdda62d587212b38b) & (SEED_USER_COUNT - 1))
 			content = "a" * (mix64(g ^ 0xffd9962d6f73449e) & SEED_MSG_SIZE_MASK)
