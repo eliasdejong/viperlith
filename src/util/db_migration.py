@@ -2,7 +2,8 @@ import os
 from src.util.db_write_con import con
 
 
-MIGRATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../migrations")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MIGRATIONS_DIR = os.path.join(CURRENT_DIR, "../../migrations")
 
 
 def run_migration():
