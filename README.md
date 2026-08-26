@@ -1,5 +1,6 @@
 # 🐍⚡🚀 Viperlith: the hypermedia based monolith for Python
 
+<img src="docs/images/powered_by_datastar.gif" alt="Powered by Datastar GIF" width="176" height="62">
 
 
 ## Introduction
@@ -36,7 +37,7 @@ and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_
 
 
 
-## How to run
+## Quick Start
 ### 1. Create `.env` file
 Copy `.env.example` and rename it to `.env`. Change configurations if necessary.
 
@@ -50,6 +51,14 @@ Copy `.env.example` and rename it to `.env`. Change configurations if necessary.
 ### 4: Run the launch script
 	./launch.sh
 
+## Deploy
+	docker build -t viperlith . \
+	&& docker run --rm \
+	    --restart=always \
+		-v viperlith-volume:/var/lib/viperlith \
+		-p 127.0.0.1:8000:8000 \
+		--env-file .env \
+		viperlith
 
 
 ## Credits
