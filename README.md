@@ -1,6 +1,6 @@
 # 🐍⚡🚀 Viperlith: the hypermedia based monolith for Python
 
-<img src="docs/images/powered_by_datastar.gif" alt="Powered by Datastar GIF" width="176" height="62">
+<img src="docs/images/powered_by_datastar.gif" alt="Powered by Datastar GIF" width="88" height="31">
 
 
 ## Introduction
