@@ -1,5 +1,6 @@
 #!/bin/bash
-trap 'kill -KILL -$$' EXIT
+set -euo pipefail
+trap 'kill -KILL -$$' TERM INT
 
 set -a; source .env; set +a
 
@@ -18,4 +19,5 @@ else
 	uv run uvicorn src.web_worker:app --loop uvloop --host 0.0.0.0 --port 8000 --log-level warning --no-access-log &
 fi
 
-wait
+wait -n || true
+kill -KILL -$$
