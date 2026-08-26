@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+.env
+tailwind_css/tailwindcss
+
+# Docker-specific ignores
+.gitea
+docs/
+benchmarks/

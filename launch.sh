@@ -2,22 +2,24 @@
 set -euo pipefail
 trap 'kill -KILL -$$' TERM INT
 
-set -a; source .env; set +a
+if [ -f .env ]; then
+	set -a; source .env; set +a
+fi
 
+export PATH="$(pwd)/.venv/bin:$PATH"
 export PYTHONPATH=.
 export DEBUG="${DEBUG:-1}"
 export WEB_CONCURRENCY=$(( DEBUG == 1 ? 1 : $(nproc) - 1 ))
 
-uv run src/util/db_migration.py
-uv run src/util/mpsc_queue.py
+python src/util/db_migration.py
+python src/util/mpsc_queue.py
 
 if [ "$DEBUG" -eq 1 ]; then
-	uv run watchfiles "python src/single_writer.py" . &
-	uv run uvicorn src.web_worker:app --loop uvloop --reload --log-level debug &
+	watchfiles "python src/single_writer.py" . &
+	uvicorn src.web_worker:app --loop uvloop --reload --log-level debug &
 else
-	uv run python src/single_writer.py &
-	uv run uvicorn src.web_worker:app --loop uvloop --host 0.0.0.0 --port 8000 --log-level warning --no-access-log &
+	python src/single_writer.py &
+	uvicorn src.web_worker:app --loop uvloop --host 0.0.0.0 --port 8000 --log-level warning --no-access-log &
 fi
 
-wait -n || true
-kill -KILL -$$
+wait -n

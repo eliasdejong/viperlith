@@ -1,0 +1,18 @@
+services:
+  viperlith:
+    build: .
+    restart: always
+    volumes:
+      - viperlith-volume:/var/lib/viperlith
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - SESSION_KEY
+      - DB_PATH
+      - DB_FILE
+      - DB_ANALYZE_INTERVAL_HOURS
+      - SHM_PATH_PREFIX
+      - FRAME_RATE
+
+volumes:
+  viperlith-volume:

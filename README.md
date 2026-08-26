@@ -30,7 +30,7 @@ Viperlith consists of the following components:
 Hypermedia-driven applications (HDA), unlike SPA frameworks (e.g. React, Vue, Angular), **eliminate state and logic on the client side**. Instead, interactive logic is moved to the backend and page updates are streamed to the client as server-rendered templates over a Server-Sent Events stream and *morphed* into the local DOM.
 This is a bit like streaming a movie, except the movie is HTML and you receive new content from updates and UI interactions. The client's browser is effectively reduced to a rendering viewport only capable of displaying raw HTML.
 
-See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for a diagram of Viperlith's CQRS architecture and an introduction to the concept of HTML streaming.
+See [docs/HTML_STREAMING.md](docs/HTML_STREAMING.md) for an introduction to the concept of HTML streaming.
 
 Also see: [the Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
 and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_framework).
@@ -38,8 +38,10 @@ and [Datastar: Why another framework?](https://data-star.dev/essays/why_another_
 
 
 ## Quick Start
-### 1. Create `.env` file
-Copy `.env.example` and rename it to `.env`. Change configurations if necessary.
+### 1. Copy `.env.example` and name it `.env`
+	cp .env.example .env
+
+Generate a `SESSION_KEY` with `openssl rand -hex 16` and change configurations if necessary.
 
 ### 2: Create directory for database file in `/var/lib`
 	sudo mkdir -p /var/lib/viperlith
@@ -51,14 +53,18 @@ Copy `.env.example` and rename it to `.env`. Change configurations if necessary.
 ### 4: Run the launch script
 	./launch.sh
 
+This will launch the application in debug mode with hot reload.
+
+Alternatively, it is possible to launch in production mode with multiple workers:
+	DEBUG=0 ./launch.sh
+
+
+
 ## Deploy
-	docker build -t viperlith . \
-	&& docker run --rm \
-	    --restart=always \
-		-v viperlith-volume:/var/lib/viperlith \
-		-p 127.0.0.1:8000:8000 \
-		--env-file .env \
-		viperlith
+Before running compose, make sure environment variables such as `SESSION_KEY` are present in the shell environment by configuring them in CI. These will take precedence before the defaults inside `.env.example`.
+
+	docker compose --env-file .env.example up --build
+
 
 
 ## Credits
