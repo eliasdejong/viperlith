@@ -1,9 +1,9 @@
 services:
-  viperlith:
+  app:
     build: .
     restart: always
     volumes:
-      - viperlith-volume:/var/lib/viperlith
+      - app_data:/var/lib/viperlith
     ports:
       - "127.0.0.1:8000:8000"
     environment:
@@ -15,4 +15,4 @@ services:
       - FRAME_RATE
 
 volumes:
-  viperlith-volume:
+  app_data:
