@@ -26,6 +26,6 @@ jobs:
           docker builder prune -f --filter "until=168h"
 
           docker compose down --remove-orphans
-          docker compose --env-file .env.example up --build
+          docker compose --env-file .env.example up --build -d
         env:
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
