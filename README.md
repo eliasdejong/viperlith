@@ -56,6 +56,7 @@ Generate a `SESSION_KEY` with `openssl rand -hex 16` and change configurations i
 This will launch the application in debug mode with hot reload.
 
 Alternatively, it is possible to launch in production mode with multiple workers:
+	
 	DEBUG=0 ./launch.sh
 
 
