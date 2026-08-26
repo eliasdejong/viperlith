@@ -27,3 +27,5 @@ jobs:
 
           docker compose down --remove-orphans
           docker compose --env-file .env.example up --build
+        env:
+          SESSION_KEY: ${{ secrets.SESSION_KEY }}
