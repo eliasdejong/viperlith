@@ -25,7 +25,7 @@ jobs:
           docker image prune -f --filter "until=24h"
           docker builder prune -f --filter "until=168h"
 
-          docker compose -p "${{ GITHUB_REPOSITORY }}" down --remove-orphans
-          docker compose -p "${{ GITHUB_REPOSITORY }}" --env-file .env.example up --build -d
+          docker compose -p "viperlith" down --remove-orphans
+          docker compose -p "viperlith" --env-file .env.example up --build -d
         env:
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
