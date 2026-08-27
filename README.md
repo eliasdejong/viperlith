@@ -6,11 +6,13 @@
 ## Introduction
 A demo application to illustrate how [Datastar](https://data-star.dev/) works.
 
-`datastar.js` is a lightweight (11kB) hypermedia framework [similar to HTMX](docs/HTML_STREAMING.md).
+`datastar.js` is a lightweight (11kB) hypermedia framework [similar to HTMX (but not)](docs/HTML_STREAMING.md).
 
 ![Starcord screenshot](docs/images/Starcord_screenshot.png)
 
 A Discord-like chat sample application is currently implemented with real-time chat rooms, creating/removing channels and setting nicknames.
+
+Live demo: https://starcord.fastserial.com
 
 
 
