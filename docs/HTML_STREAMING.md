@@ -107,18 +107,18 @@ To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/g
 
 **Coming up: How CQRS combined with SQLite supercharges your database performance to new heights**
 
-Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that far exceeds most people's expectations. Most gains are achieved by placing the data close to where it is needed.
+Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that exceeds most people's expectations. Most gains are achieved by placing the data close to where it is needed.
 
 To summarize, full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
 
-So that addresses the server-side, but what about the client?
+So that addresses the server side, but what about the client?
 
 
 
 ## The Magic Sauce: Idiomorph
-[Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm written in JavaScript, of which Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
+[Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm in JavaScript, of which Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once. The clever part, is that it only updates page elements if they actually changed.
 
-Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. The server can send the **entire page** at once (known as a "fat morph"), and the algorithm on the client will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`view = f(state)` aka `html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
+Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. The server can send the **entire page** at once (known as a "fat morph") as a HTML string, and the algorithm on the client will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`view = f(state)` aka `html = render(DB)`) on the backend, and simply re-render when the state (i.e. DB) changes. No manual diffing or VDOM required.
 
 
 
@@ -138,19 +138,25 @@ An HTTP SSE response is kept open and we keep streaming HTML over it to the clie
 ## Why Polling Is Bad
 The out-of-bounds discussion has answered the question of "which parts do we update?". Answer: the entire page. Now we shift to "**when** do we send updates?".
 
-Let's attack some underlying assumptions first. Namely, who is in charge of page updates?
+Let's address some underlying assumptions first. Namely, who is in charge of page updates?
 1. **The client**: should it poll the server for information?
 2. **The server**: "push" updates to the client as they become available
 
 Spoiler alert: **The answer is 2**
 
-To understand why, consider this: Who owns the application state? The answer of course, is the server. This is also the party who knows when it is appropriate to send an update i.e. if the application state changed. It owns the state, so therefore it knows. The client doesn't "know" anything. It just connected via a URL and received a "view" in the form of a webpage.
+To quote [Derek's excellent blog](https://yagni.club/):
+> request/response
+>
+> Let's start even simpler with a request/response. Classic AJAX stuff. You POST an action to the server, get some HTML back in the response and patch it in place. Your friend did their own POST in the same 10ms window. They get their update, you get yours. Someone has stale data until they manually refresh the page. There's no realtime mechanism in place helping users share the same view or projection of the truth.
 
-It sounds simple: only send when you actually have something to send. But it's also more efficient in terms of network traffic, battery life and latency. When an update occurs, you can send it immediately. No need for a client to poll and "find out" that a resource has become outdated.
+Consider this: Who owns the application state? The answer of course, is the server. This is also the party who knows when it is appropriate to send an update (i.e. if the application state changed). It owns the state, so therefore it knows. The client doesn't "know" anything. It just connected via a URL and received a "view" in the form of a webpage.
+
+It sounds simple: only send when you actually have something to send. But it's also more efficient in terms of network traffic, battery life and **latency**. When an update occurs, you can send it immediately. No need for a client to "find out" that a resource has become outdated.
 
 So how to push? That is the question. There happens to be a great mechanism in the browser that we can use for this: **Server-Sent Events**.
 
 This brings us to...
+
 
 
 ## Why Server-Sent Events?
@@ -184,7 +190,7 @@ Another misconception: SSE is *always persistent*.
 An SSE response can keep contain one chunk, or multiple. The server can keep sending data as long as it wants, as it is in control of when the response ends.
 
 ### So Why use SSE?
-Because it **places the server in control of when data is sent** (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli streaming compression as discussed.
+Because it **places the server in control of when data is sent** (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli streaming compression as discussed earlier.
 
 Datastar encourages a "push" model with full-page rebuilds similar to [immediate mode rendering](https://en.wikipedia.org/wiki/Immediate_mode_(computer_graphics)). These full page updates (known as "fat morphs") are sent directly to the client, replacing the entire contents of the screen at once. Server-Sent Events work exceptionally well in this model. Of all the tools available in the browser, this one emerged as a winner.
 
@@ -250,7 +256,7 @@ Here is the mandatory client-server diagram, with the server on top:
 Having the ability to render any HTML through templates, what do we need state on the client for? We can keep all state in the backend and simply send down the declarative HTML for what the client is supposed to see at any given moment over SSE. This drastically simplifies the picture on the client.
 
 To give an idea for the sequence of events:
-1. The client connects for the first time, requesting the stream via `/updates`.
+1. The client connects for the first time, issuing a `GET` to `/updates`.
 2. The server responds with the `text/event-stream` response type, and `Connection: Keep-Alive`, meaning the connection stays open.
 3. The server continuously "pushes" an update of the screen over the SSE stream, anytime a resource on the server changes, necessitating a re-render.
 4. During this time, the client may be able to interact with the server via buttons etc. These send regular short-lived POST requests.
@@ -260,7 +266,7 @@ Notice that the page content is always delivered over the single SSE stream that
 
 
 ## Client-side State in React
-Now compare this with the story for client-side state in React:
+When HTML reaches the browser, it can be rendered directly. Now compare this with the story for client-side state in React:
 
 <img src="images/react_state_mgmt.webp" alt="React state management" width="800">
 
@@ -274,7 +280,7 @@ Relying on HTML extends not only to DOM updates, but also to UI components. HTML
 
 
 ## Simple Web Server Architecture
-We have discussed a lot about Datastar on the client. Now let us address the server side. We will work our way up from a simple web server, all the way up to a CQRS architecture used by Viperlith.
+Now let us address some backend architecture. What does a Datastar backend look like? We will work our way up from a simple web server, all the way up to a CQRS architecture used by Viperlith.
 
 A simple web server + database might look like this:
 ```
