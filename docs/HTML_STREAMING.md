@@ -107,7 +107,7 @@ To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/g
 
 **Coming up: How CQRS combined with SQLite supercharges your database performance to new heights**
 
-Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that exceeds most people's expectations. Most gains are achieved by placing the data close to where it is needed.
+Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that exceeds most people's expectations. The majority of gains are achieved by placing the data close to where it is needed.
 
 To summarize, full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
 
@@ -153,7 +153,7 @@ Consider this: Who owns the application state? The answer of course, is the serv
 
 It sounds simple: only send when you actually have something to send. But it's also more efficient in terms of network traffic, battery life and **latency**. When an update occurs, you can send it immediately. No need for a client to "find out" that a resource has become outdated.
 
-So how to push? That is the question. There happens to be a great mechanism in the browser that we can use for this: **Server-Sent Events**.
+So how to push you ask? There happens to be a great mechanism in the browser that we can use for this: **Server-Sent Events**.
 
 This brings us to...
 
@@ -161,9 +161,7 @@ This brings us to...
 
 ## Why Server-Sent Events?
 ### First of all: What are Server-Sent Events?
-To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
-
-For the full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
+To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4). For the full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
 
 Short answer: SSE is an HTTP response type: `text/event-stream`. Other HTTP response types include `text/html`, `application/json` and `multipart/form-data`. Those are for HTML, JSON and form data respectively.
 
@@ -185,9 +183,7 @@ It is mostly just text. But notice the particular format with `event:`, `data:` 
 ### What SSE is NOT
 SSE is NOT connection type, it's actually **just HTTP** ([watch the video](https://www.youtube.com/watch?v=xq1dVQ-isb4)).
 
-Another misconception: SSE is *always persistent*.
-
-An SSE response can keep contain one chunk, or multiple. The server can keep sending data as long as it wants, as it is in control of when the response ends.
+Another misconception: "SSE is always persistent". An SSE response can keep contain one chunk, or multiple. The server can keep sending data as long as it wants, as it is in control of when the response ends. It can end at any time.
 
 ### So Why use SSE?
 Because it **places the server in control of when data is sent** (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli streaming compression as discussed earlier.
@@ -199,7 +195,7 @@ Datastar encourages a "push" model with full-page rebuilds similar to [immediate
 ## Why not web sockets?
 In practice, web sockets are a rarely a good choice. HTTP handles a lot functionality "for free" (compression, stateful connections, multiplexing, etc.), all natively in the browser (in C++). But with web sockets, applications must handle all of that themselves on the main thread in JavaScript. This is not only a lot overhead to manage yourself, but it also competes with everything in JavaScript performance-wise.
 
-The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's a dead end and not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
+The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
 
 
 
@@ -280,7 +276,7 @@ Relying on HTML extends not only to DOM updates, but also to UI components. HTML
 
 
 ## Simple Web Server Architecture
-Now let us address some backend architecture. What does a Datastar backend look like? We will work our way up from a simple web server, all the way up to a CQRS architecture used by Viperlith.
+What options do we have to structure our backend? We will work our way up from a simple web server, all the way up to a CQRS architecture used by Viperlith.
 
 A simple web server + database might look like this:
 ```
