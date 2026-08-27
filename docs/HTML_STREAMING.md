@@ -34,10 +34,10 @@ This page will explain the concept of HTML Streaming and why it is the future of
 ### Problem #1: Client-side variables (or lack thereof)
 Experience shows that even for server-rendered apps, you still want some client-side interactivity. For example, having to send a network request just to show a dropdown menu is undesirable. However, HTMX provides very little in the way of this, meaning you need to pull in additional JavaScript libraries such as [Alpine.js](https://alpinejs.dev/). While lightweight, they introduce new syntax and APIs. Also, Alpine stores state outside the DOM that [doesn't always play well with HTMX](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431), sometimes causing conflicts when updating real elements on the page. There is now an [HTMX-Alpine compatibility extension](https://four.htmx.org/extensions/hx-alpine-compat) that somewhat improves the situation, but still it isn't ideal.
 
-Datastar instead ships with **signals** built-in. They can be thought of as client-side state objects similar to `x-data` in Alpine. Trough a lightweight set of [attributes](https://data-star.dev/reference/attributes), it is possible to build declarative client-side expressions for a wide range of interactivity (showing/hiding dropdowns, menus, search filtering etc.), meaning you need just a single script instead of two (Datastar (11 kB) vs HTMX 4.0 (11 kB) + Alpine (13.4 kB))[^3]. But the greatest advantage is the better integration. By default, Datastar includes all client-side signals in every request. Every stateful component on the page can be mapped to a JSON value, and now your backend will be automatically aware of it. This makes common patterns like form submission trivial. But also, you can send a JSON response from the server and patch client signals directly. In general, it is hard to overstate the friction and desync issues that this removes.
+Datastar instead ships with **signals** built-in. They can be thought of as client-side state objects similar to `x-data` in Alpine. Through a lightweight set of [attributes](https://data-star.dev/reference/attributes), it is possible to build declarative client-side expressions for a wide range of interactivity (showing/hiding dropdowns, menus, search filtering etc.), meaning you need just a single script instead of two (Datastar (11 kB) vs HTMX 4.0 (11 kB) + Alpine (13.4 kB))[^3]. But the greatest advantage is better integration. By default, Datastar includes all client-side signals in every request. Every stateful component on the page can be mapped to a JSON value, and now your backend will be automatically aware of it. This makes common patterns like form submission trivial. But also, you can send a JSON response from the server and patch client signals directly. In general, it is hard to overstate the desync issues that this removes.
 
 ### Problem #2 (the big one): Polling Instead of Push
-But there is a more fundamental difference: HTMX relies on request-response interactions with partial HTML-fragments "patched" into the DOM. Remember: your API returns HTML not JSON. This means that most interactions consist of page fragments requested from the server, each one returning an HTML template patched in place.
+But there is a more fundamental difference: HTMX relies on request-response interactions with partial HTML-fragments "patched" into the DOM. Remember: your backend returns HTML not JSON. This means that most interactions consist of page fragments requested from the server, each one returning an HTML template patched in place.
 
 However, this creates a problem of "patchwork". HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI updates consists of these different triggers, questions arise; namely, which parts do you update, and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which updates to send?
 
@@ -90,31 +90,33 @@ In Datastar, responses are always out-of-band by default. For many HTMX users, t
 
 Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190).
 
-Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. However, Datastar encourages something radical that solves all "update what and where" questions in one full sweep: **just replace the entire page**.
+Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. However, Datastar encourages something radical: **just replace the entire page**.
 
 Finally, no more fragments. No more partials. Every. Request. Rebuilds. The. Entire. Page; from a single `render()` call on the backend. Full-page rebuilding eliminates most desync problems. Because everytime you rebuild, you are up to date. No ifs or buts. This is similar to [immediate mode rendering](https://en.wikipedia.org/wiki/Immediate_mode_(computer_graphics)) in the graphics world.
 
 
 
 ## Full Page Rebuilds? No Way
-Unfortunately, now another issue comes up: **Performance**.
+The server will send the entire page as HTML in a response (specifically the `<body>` tag). Yes, **the entire page**. So what? It's just a string. If you are scared of doing this, then close this page and go back to using React.
 
 > Now I have te rebuild my entire page on every tiny change? Are you out of your mind? Do you know what that costs me? Cloud credits don't grow on trees you know?
 
-Datastar was born out of a desire for performance and sanity, by someone who was not traditionally a web developer. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
+Oh you're still here? Unfortunately, a lot of developers are scared of doing this and bring up performance as a concern. First: have you actually measured and found it to be a problem?
 
-**Coming up: How CQRS combined with SQLite on local NVMe supercharges your database performance to new heights**
+To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Datastar was born out of a desire for performance and sanity, by someone who was not traditionally a web developer. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has a habit to buy into complex solutions that "scale", usually by layering more services and gluing them together. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
 
-To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Whatever your current interpretation is of Datastar, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html). The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batching transactions and **having only a single writer** (more on that later).
+**Coming up: How CQRS combined with SQLite supercharges your database performance to new heights**
 
-Full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
+Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that far exceeds most people's expectations. Most gains are achieved by placing the data close to where it is needed.
+
+To summarize, full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
+
+So that addresses the server-side, but what about the client?
 
 
 
 ## The Magic Sauce: Idiomorph
-We will address performance on the server side, but let's address the client first. The server will send the entire page as HTML in a response. Yes, **the entire page**. So what? It's just a string. If you are scared of doing this, then close this page and go back to using React.
-
-Oh you're still here? So as I was saying, [Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm and Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
+[Idiomorph](https://github.com/bigskysoftware/idiomorph) is a sophisticated DOM-morphing algorithm written in JavaScript, of which Datastar uses its own adapted implementation. This algorithm takes any fragment of HTML and *morphs* it into the local DOM, replacing or inserting content on the page. It is possible to target individual elements, or morph the entire page at once.
 
 Practically, this means we no longer have to care about partial rendering or diffing for performance reasons. The server can send the **entire page** at once (known as a "fat morph"), and the algorithm on the client will only touch the real DOM where it needs to change. This allows us to render the whole page from a single function (`view = f(state)` aka `html = render(DB)`) on the backend, and simply re-render when the state (DB) changes. No manual diffing or VDOM required.
 
@@ -146,10 +148,9 @@ To understand why, consider this: Who owns the application state? The answer of 
 
 It sounds simple: only send when you actually have something to send. But it's also more efficient in terms of network traffic, battery life and latency. When an update occurs, you can send it immediately. No need for a client to poll and "find out" that a resource has become outdated.
 
-So how to push? That is the question. There happens to be a great mechanism in the browser for this that we can use: **Server-Sent Events**.
+So how to push? That is the question. There happens to be a great mechanism in the browser that we can use for this: **Server-Sent Events**.
 
 This brings us to...
-
 
 
 ## Why Server-Sent Events?
