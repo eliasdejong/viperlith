@@ -29,15 +29,17 @@ This page will explain the concept of HTML Streaming and why it is the future of
 
 
 ## Datastar vs HTMX
-See also: [Why another framework?](https://data-star.dev/essays/why_another_framework).
+[HTMX](https://htmx.org/) is a great library that inspired many people in the web development world to reconsider what is possible. However when building larger applications with HTMX, it has some inherent complexity that builds up over time. So what are the problems?
 
-[HTMX](https://htmx.org/) is a great library that inspired many people in the web development world to reconsider what is possible. However when building larger applications with HTMX, it has some inherent complexity that builds up over time.
+### Problem #1: Client-side variables (or lack thereof)
+Experience shows that even for server-rendered apps, you still want some client-side interactivity. For example, having to send a network request just to show a dropdown menu is undesirable. However, HTMX provides very little in the way of this, meaning you need to pull in additional JavaScript libraries such as [Alpine.js](https://alpinejs.dev/). While lightweight, they introduce new syntax and APIs. Also, Alpine stores state outside the DOM that [doesn't always play well with HTMX](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431), sometimes causing conflicts when updating real elements on the page. There is now an [HTMX-Alpine compatibility extension](https://four.htmx.org/extensions/hx-alpine-compat) that somewhat improves the situation, but still it isn't ideal.
 
-For some interactions, like showing a dropdown menu, sending a network request is undesirable. However HTMX provides very little in the way of client-side variables, necessitating additional JavaScript frameworks such as [Alpine.js](https://alpinejs.dev/). While lightweight, these frameworks introduce additional APIs and overhead while [not always playing well with htmx](https://youtu.be/SjUoc8R1dzQ?si=mGA4nkLOCs49cAje&t=1431). Datastar instead has **signals** and a lightweight set of [attributes](https://data-star.dev/reference/attributes) to build client-side expressions, meaning another library isn't needed for the majority of use cases.
+Datastar instead ships with **signals** built-in. They can be thought of as client-side state objects similar to `x-data` in Alpine. Trough a lightweight set of [attributes](https://data-star.dev/reference/attributes), it is possible to build declarative client-side expressions for a wide range of interactivity (showing/hiding dropdowns, menus, search filtering etc.), meaning you need just a single script instead of two (Datastar (11 kB) vs HTMX 4.0 (11 kB) + Alpine (13.4 kB))[^3]. But the greatest advantage is the better integration. By default, Datastar includes all client-side signals in every request. Every stateful component on the page can be mapped to a JSON value, and now your backend will be automatically aware of it. This makes common patterns like form submission trivial. But also, you can send a JSON response from the server and patch client signals directly. In general, it is hard to overstate the friction and desync issues that this removes.
 
-Great, but there are more fundamental differences: HTMX primarily relies on request-response (pull) interactions with partial HTML-fragments "patched" into the DOM. Remember: your API returns HTML not JSON. This means that most interactions consist of "patchwork". Page fragments, requested from the server one at a time, each one returning a server-side rendered (SSR) HTML template.
+### Problem #2 (the big one): Polling Instead of Push
+But there is a more fundamental difference: HTMX relies on request-response interactions with partial HTML-fragments "patched" into the DOM. Remember: your API returns HTML not JSON. This means that most interactions consist of page fragments requested from the server, each one returning an HTML template patched in place.
 
-HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI consists of patchwork, questions arise; namely, which parts do you update and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which update to send, when?
+However, this creates a problem of "patchwork". HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI updates consists of these different triggers, questions arise; namely, which parts do you update, and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which updates to send?
 
 
 
@@ -54,7 +56,7 @@ Will replace wherever the `#alerts` element is on the page. Wherever it may be!
 
 When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably they start using it more. So much so, that eventually entire pages consist of elements swapped out-of-bounds. So why exactly is this feature so powerful?
 
-The reason has to do with the earlier stated problem: what do you update, and when? First, notice how the server is now in control of which parts of the page get updated: by setting the `id` of the out-of-bounds element, the server can target exactly where the update takes place. Or in other words: **the server controls the view**.
+The reason has to do with the earlier stated problem: what part do you update on the page? First, notice how the server is now in control: by setting the `id` of the out-of-bounds element, the server can target exactly where the update takes place. Or in other words: **the server controls the view**.
 
 
 
@@ -82,28 +84,30 @@ Your client can call this endpoint whenever and however many times it wants. Eve
 
 
 ## Datastar: Out-of-Band By Default
-In Datastar, responses are always out-of-band by default. For many HTMX users, this is very confusing since there is no `hx-target`. Looking at just the HTML markup, you cannot tell exactly what is going on.
+In Datastar, responses are always out-of-band by default. For many HTMX users, this is very confusing as there is no `hx-target`. Looking at just the HTML markup, you cannot tell exactly what is going on.
 
 **And this is by design**: HTML is just a declarative markup of whatever should currently be displayed on the screen. It does not control the view, **because the server controls the view**.
 
-Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190). However, extending this concept: Datastar encourages something more radical: **to swap the entire page at once**. Finally, no more fragments. No more partials. Every. Request. Rebuilds. The. Entire. Page; from a single `render()` call on the backend.
+Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190).
+
+Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. However, Datastar encourages something radical that solves all "update what and where" questions in one full sweep: **just replace the entire page**.
+
+Finally, no more fragments. No more partials. Every. Request. Rebuilds. The. Entire. Page; from a single `render()` call on the backend. Full-page rebuilding eliminates most desync problems. Because everytime you rebuild, you are up to date. No ifs or buts. This is similar to [immediate mode rendering](https://en.wikipedia.org/wiki/Immediate_mode_(computer_graphics)) in the graphics world.
 
 
 
 ## Full Page Rebuilds? No Way
-Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. Full-page rebuilding eliminates most of these problems. Because everytime you rebuild, you are up to date. No ifs or buts.
-
 Unfortunately, now another issue comes up: **Performance**.
 
 > Now I have te rebuild my entire page on every tiny change? Are you out of your mind? Do you know what that costs me? Cloud credits don't grow on trees you know?
 
-Datastar was born out of a desire for performance, by someone who was not traditionally a web developer but was forced into web development partially out of disgust for the ecosystem. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
+Datastar was born out of a desire for performance and sanity, by someone who was not traditionally a web developer. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has been cargo-culted into buy-in for complex solutions that "scale", usually by layering more services and gluing them together for the sake of being "distributed", also known as "resume-driven-development" (RDD). Postgres here, Redis there. Reverse proxy of course. And an Elastic instance just in case. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
 
 **Coming up: How CQRS combined with SQLite on local NVMe supercharges your database performance to new heights**
 
 To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Whatever your current interpretation is of Datastar, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html). The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batching transactions and **having only a single writer** (more on that later).
 
-Full-page rebuilds are faster than you think, provided your database and web server architecture are also fast, which they should be.
+Full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
 
 
 
@@ -117,7 +121,7 @@ Practically, this means we no longer have to care about partial rendering or dif
 
 
 ## Practically Cheating: Brotli Compression
-Oh, but you are concerned about network bandwidth? That which your cloud vendor bills you very heavily for? Well, use of persistent SSE streams enables **streaming compression** across an entire session compared to mere individual requests. Using the browser's built-in [Brotli compression](https://en.wikipedia.org/wiki/Brotli), extra bytes are sent over the wire only if the content is changed. This achieves total compression ratio's upwards of 50-4000x, exceeding what is commonly attainable from gzipped responses.
+Oh, but you are concerned about network bandwidth? That which your cloud vendor bills you very heavily for? Well, use of persistent SSE streams enables **streaming compression** across an entire session compared to mere individual requests. Using the browser's built-in [Brotli compression](https://en.wikipedia.org/wiki/Brotli), extra bytes are sent over the wire only if the content is changed. This achieves total [compression ratio's of 58.5x](https://zweiundeins.gmbh/en/blog/spa-vs-hypermedia-real-world-performance-under-load#streaming-efficiency-sse-compression) and better, exceeding what is commonly attainable from gzipped responses.
 
 Brotli is a compression algorithm similar to GZip or ZStandard, which is available by default in most browsers. It supports **streaming compression**, meaning we can compress HTTP responses "continuously" as they arrive. Crucially, the **compression context persists as long as a given response**. Meaning any data we send in a response can refer back and de-duplicate anything that came before it. Notice how well this synergizes with Datastar's encouraged use of Server-Sent Events and long-lived responses. Under the hood, this uses HTTP/1.1's [Chunked Transfer Coding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) or more efficient mechanisms for data streaming in HTTP/2.
 
@@ -126,6 +130,23 @@ Remember this:
 - Brotli streaming compression over SSE: keeps the compression window for the duration of the stream
 
 An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the **delta** of the page content. Idiomorph ensures we only touch the real DOM where necessary.
+
+
+
+## Why Polling Is Bad
+The out-of-bounds discussion has answered the question of "which parts do we update?". Answer: the entire page. Now we shift to "**when** do we send updates?".
+
+Let's attack some underlying assumptions first. Namely, who is in charge of page updates?
+1. **The client**: should it poll the server for information?
+2. **The server**: "push" updates to the client as they become available
+
+Spoiler alert: **The answer is 2**
+
+To understand why, consider this: Who owns the application state? The answer of course, is the server. This is also the party who knows when it is appropriate to send an update i.e. if the application state changed. It owns the state, so therefore it knows. The client doesn't "know" anything. It just connected via a URL and received a "view" in the form of a webpage.
+
+It sounds simple: only send when you actually have something to send. But it's also more efficient in terms of network traffic, battery life and latency. When an update occurs, you can send it immediately. No need for a client to poll and "find out" that a resource has become outdated.
+
+So how to push? That is the question. There happens to be a great mechanism in the browser for this that we can use: **Server-Sent Events**.
 
 This brings us to...
 
@@ -162,7 +183,7 @@ Another misconception: SSE is *always persistent*.
 An SSE response can keep contain one chunk, or multiple. The server can keep sending data as long as it wants, as it is in control of when the response ends.
 
 ### So Why use SSE?
-Because it **places the server in control of when data is sent** (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli compression as discussed.
+Because it **places the server in control of when data is sent** (push vs pull). Additionally, it synergized well with native browser functionality, such as Brotli streaming compression as discussed.
 
 Datastar encourages a "push" model with full-page rebuilds similar to [immediate mode rendering](https://en.wikipedia.org/wiki/Immediate_mode_(computer_graphics)). These full page updates (known as "fat morphs") are sent directly to the client, replacing the entire contents of the screen at once. Server-Sent Events work exceptionally well in this model. Of all the tools available in the browser, this one emerged as a winner.
 
@@ -425,3 +446,4 @@ No AI was used whatsoever in any part of this writing.
 
 [^1]: Postgres' MVCC implementation [has aged quite poorly](https://www.cs.cmu.edu/~pavlo/blog/2023/04/the-part-of-postgresql-we-hate-the-most.html). Long-running transactions can block the autovacuum process, which leaves behind more dead tuples, which in turn slow down transactions in a vicious cycle until the database halts to a crawl.
 [^2]: Shared memory [is the fastest way of communicating between processes](https://chengxin.de/2021/ipc/).
+[^3]: Sizes compressed and minified
