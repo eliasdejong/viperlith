@@ -115,8 +115,10 @@ def seed():
 	
 
 	print("Creating messages...")
-	def message_rows():
-		for g in range(SEED_MSG_COUNT):
+	con.execute("drop index if exists idx_messages_channel_ts")
+
+	def message_rows(start, end):
+		for g in range(start, end):
 			channel_id = zipf_rank(
 				g ^ 0xa581c28479563caa,
 				SEED_CHANNEL_COUNT,
@@ -135,21 +137,27 @@ def seed():
 				created_ts,
 			)
 
-	with con:
-		con.execute("drop index if exists idx_messages_channel_ts")
-		con.executemany("""
-			INSERT into messages (
-				channel_id,
-				user_id,
-				content,
-				created_ts
+	COMMIT_BATCH_SIZE = 1_000_000
+	rows_written = 0
+	while rows_written < SEED_MSG_COUNT:
+		batch_end = rows_written + min(COMMIT_BATCH_SIZE, SEED_MSG_COUNT - rows_written)
+		with con:
+			con.executemany("""
+				INSERT into messages (
+					channel_id,
+					user_id,
+					content,
+					created_ts
+				)
+				values (?, ?, ?, ?)
+				""",
+				message_rows(rows_written, batch_end),
 			)
-			values (?, ?, ?, ?)
-			""",
-			message_rows(),
-		)
-		print("Creating index...")
-		con.execute("create index idx_messages_channel_ts on messages(channel_id, created_ts)")
+		rows_written = batch_end
+		print(f"Rows written: {rows_written} / {SEED_MSG_COUNT}")
+
+	print("Creating index...")
+	con.execute("create index idx_messages_channel_ts on messages(channel_id, created_ts)")
 
 	print("Optimizing...")
 	con.pragma("optimize", 0x10002)
