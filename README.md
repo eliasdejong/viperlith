@@ -72,5 +72,14 @@ By default, the application will bind to localhost on `127.0.0.1:8000`. The appl
 
 
 
+# Tuning
+It is possible to set `cache_size` for SQLite in `src/util/db_read_con.py` and `src/util/db_write_con.py`. Currently it is set to 8 MiB per connection:
+
+	con.pragma("cache_size", -8192) # 8 MiB
+
+This setting was found to work well on weak VPS machines (8GB, 4 vcores). You may want to set it higher on more powerful hardware (e.g. `-32768`). To be sure, experiment yourself.
+
+
+
 ## Credits
 Inspired by Anders Murphy's [Hyperlith](https://github.com/andersmurphy/hyperlith).
