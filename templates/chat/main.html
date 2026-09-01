@@ -84,7 +84,7 @@
 		{% set nickname = con.execute(
 				'select nickname from users where session_id = ?',
 				(sid,)
-			).fetchone()[0]
+			).get
 		%}
 		{% if nickname %}
 			<input
