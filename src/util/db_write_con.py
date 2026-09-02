@@ -11,10 +11,11 @@ con = apsw.Connection(
 	os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE")),
 	flags=apsw.SQLITE_OPEN_READWRITE | apsw.SQLITE_OPEN_CREATE,
 )
-con.pragma("page_size", 16384)
+con.pragma("page_size", 4096)
 con.pragma("journal_mode", "wal")
-con.pragma("journal_size_limit", 8388608) # 8 MiB; prevent WAL from growing unbounded
-con.pragma("synchronous", "normal")
+con.pragma("journal_size_limit", 33554432) # 32 MiB; prevent WAL from growing unbounded
+con.pragma("wal_autocheckpoint", -1)
+con.pragma("synchronous", "off")
 
 con.pragma("cache_size", -8192)
 con.pragma("busy_timeout", 5000)

@@ -9,7 +9,7 @@ apsw.initialize()
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
 
 DB_FILE_PATH = os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE"))
-POOL_SIZE = 4
+CON_POOL_SIZE = 5
 
 utility_con = None
 _connections = None
@@ -21,7 +21,7 @@ async def con_create() -> apsw.AsyncConnection:
 		DB_FILE_PATH,
 		flags=apsw.SQLITE_OPEN_READONLY
 	)
-	await con.pragma("cache_size", -1024)
+	await con.pragma("cache_size", -4096)
 	await con.pragma("busy_timeout", 5000)
 	await con.pragma("mmap_size", 4294967296)
 	return con
@@ -35,5 +35,5 @@ async def con_pool_create() -> None:
 		flags=apsw.SQLITE_OPEN_READONLY,
 		statementcachesize=0,
 	)
-	_connections = [await con_create() for i in range(POOL_SIZE)]
+	_connections = [await con_create() for i in range(CON_POOL_SIZE)]
 	con_pool = itertools.cycle(_connections)
