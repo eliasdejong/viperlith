@@ -23,10 +23,7 @@ async def con_create() -> apsw.AsyncConnection:
 	)
 	await con.pragma("cache_size", -1024)
 	await con.pragma("busy_timeout", 5000)
-	# await con.pragma("mmap_size", 281474976710655)
-	# await con.pragma("mmap_size", 8589934592)
 	await con.pragma("mmap_size", 4294967296)
-	# await con.pragma("temp_store", "memory")
 	return con
 
 async def con_pool_create() -> None:
