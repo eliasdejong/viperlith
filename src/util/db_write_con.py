@@ -19,6 +19,6 @@ con.pragma("mmap_size", 281474976710655)
 con.pragma("temp_store", "memory")
 
 con.pragma("journal_mode", "wal")
-con.pragma("journal_size_limit", 4194304) # 4 MiB; prevent WAL from growing unbounded
+con.pragma("journal_size_limit", 8388608) # 8 MiB; prevent WAL from growing unbounded
 con.pragma("synchronous", "normal")
 con.pragma("optimize", 0x10002)

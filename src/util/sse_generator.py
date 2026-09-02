@@ -1,21 +1,22 @@
 from collections.abc import AsyncGenerator
-from src.util.db_read_con import con
+import src.util.db_read_con as db
 from src.util.frame_ticks import frame_ticks_async
 
 
-async def sse_generator(render: Callable[..., str], *args, **kwargs) -> AsyncGenerator[str, None]:
+async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) -> AsyncGenerator[str, None]:
 	try:
-		prev_data_version = None
+		prev_version = None
 		async for _ in frame_ticks_async():
-			data_version = con.pragma("data_version")
-			if data_version == prev_data_version:
+			version =  await db.utility_con.pragma("data_version")
+			if version == prev_version:
 				continue
-			prev_data_version = data_version
+			prev_version = version
+			html = await render(*args, **kwargs)
 			yield (
 				"event: datastar-patch-elements\n"
 				"data: selector body\n"
 				"data: mode outer\n"
-				"data: elements " + render(*args, **kwargs).replace("\n", "\ndata: elements ")
+				"data: elements " + html.replace("\n", "\ndata: elements ")
 				+ "\n\n"
 			)
 	except Exception as e:
