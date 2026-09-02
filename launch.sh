@@ -10,7 +10,6 @@ export PATH="$(pwd)/.venv/bin:$PATH"
 export PYTHONPATH=.
 export DEBUG="${DEBUG:-1}"
 export WEB_CONCURRENCY=$(( DEBUG == 1 ? 1 : $(nproc) ))
-export SQLITE_CONNECTION_COUNT_MAX=192
 
 python src/util/db_migration.py
 python src/util/mpsc_queue.py
