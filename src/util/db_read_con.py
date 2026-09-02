@@ -9,7 +9,7 @@ apsw.initialize()
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
 
 DB_FILE_PATH = os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE"))
-POOL_SIZE = 5
+POOL_SIZE = 4
 
 utility_con = None
 _connections = None
