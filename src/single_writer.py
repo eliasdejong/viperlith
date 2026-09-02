@@ -74,18 +74,14 @@ def writer_tick():
 	con.pragma("wal_checkpoint", "full")
 
 def run_writer():
-	try:
-		mpsc.attach_all()
-		frames = 0
-		for _ in frame_ticks():
-			writer_tick()
-			if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0:
-				con.pragma("optimize")
-			frames += 1
-	finally:
-		con.pragma("optimize", 0x00002)
-		con.pragma("wal_checkpoint", "truncate")
-		con.close()
+	con.pragma("optimize", 0x10002)
+	mpsc.attach_all()
+	frames = 0
+	for _ in frame_ticks():
+		writer_tick()
+		if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0:
+			con.pragma("optimize")
+		frames += 1
 
 if __name__ == "__main__":
 	run_writer()
