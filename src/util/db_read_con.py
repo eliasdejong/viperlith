@@ -21,9 +21,9 @@ async def con_create() -> apsw.AsyncConnection:
 		DB_FILE_PATH,
 		flags=apsw.SQLITE_OPEN_READONLY
 	)
-	await con.pragma("cache_size", -1024) # 1 MiB
+	await con.pragma("cache_size", -2048) # 4 MiB
 	await con.pragma("busy_timeout", 5000)
-	await con.pragma("mmap_size", 281474976710655)
+	# await con.pragma("mmap_size", 281474976710655)
 	await con.pragma("temp_store", "memory")
 	return con
 

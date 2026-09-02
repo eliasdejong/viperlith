@@ -15,7 +15,7 @@ con = apsw.Connection(
 )
 con.pragma("cache_size", -8192) # 8 MiB
 con.pragma("busy_timeout", 5000)
-con.pragma("mmap_size", 281474976710655)
+# con.pragma("mmap_size", 281474976710655)
 con.pragma("temp_store", "memory")
 
 con.pragma("journal_mode", "wal")
