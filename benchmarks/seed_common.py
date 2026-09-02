@@ -156,6 +156,9 @@ def seed():
 		rows_written = batch_end
 		print(f"Rows written: {rows_written} / {SEED_MSG_COUNT}")
 
+	print("Truncating WAL...")
+	con.pragma("wal_checkpoint", "truncate")
+
 	print("Creating index...")
 	con.execute("create index idx_messages_channel_ts on messages(channel_id, created_ts)")
 
