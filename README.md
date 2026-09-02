@@ -72,5 +72,11 @@ By default, the application will bind to localhost on `127.0.0.1:8000`. The appl
 
 
 
+## Tuning
+Disable block device readahead to reduce excess page faults in larger-than-RAM datasets (see block devices with `lsblk`):
+	
+	sudo blockdev --setra 0 /dev/nvme0n1
+
+
 ## Credits
 Inspired by Anders Murphy's [Hyperlith](https://github.com/andersmurphy/hyperlith).
