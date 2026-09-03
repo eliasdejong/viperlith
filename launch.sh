@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-trap 'kill -KILL -$$' TERM INT
+trap 'kill -KILL -$$' TERM INT EXIT
 
 if [ -f .env ]; then
 	set -a; source .env; set +a
