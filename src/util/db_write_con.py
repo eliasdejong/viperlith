@@ -15,7 +15,7 @@ con.pragma("page_size", 4096)
 con.pragma("journal_mode", "wal")
 con.pragma("journal_size_limit", 33554432) # 32 MiB; prevent WAL from growing unbounded
 con.pragma("wal_autocheckpoint", -1)
-con.pragma("synchronous", "off")
+con.pragma("synchronous", "normal")
 
 con.pragma("cache_size", -8192)
 con.pragma("busy_timeout", 5000)
