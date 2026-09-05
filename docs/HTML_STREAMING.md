@@ -54,7 +54,7 @@ An element like this:
 ```
 Will replace wherever the `#alerts` element is on the page. Wherever it may be!
 
-When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, invariably they start using it more. So much so, that eventually entire pages consist of elements swapped out-of-bounds. So why exactly is this feature so powerful?
+When developers working on a mid to large HTMX codebase discover `hx-swap-oob`, inevitably they start using it more. So much so, that eventually entire pages consist of elements swapped out-of-bounds. So why exactly is this feature so powerful?
 
 The reason has to do with the earlier stated problem: what part do you update on the page? First, notice how the server is now in control: by setting the `id` of the out-of-bounds element, the server can target exactly where the update takes place. Or in other words: **the server controls the view**.
 
@@ -90,7 +90,7 @@ In Datastar, responses are always out-of-band by default. For many HTMX users, t
 
 Datastar allows you target individual elements by `id` like HTMX. Heck, you can even [emulate the entirety of HTMX in Datastar](https://github.com/starfederation/datastar/issues/1190).
 
-Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. However, Datastar encourages something radical: **just replace the entire page**.
+Previously, when inserting partial HTML fragments, parts of the page would show stale data when updated by different events at different intervals. However, Datastar encourages something more radical: **just replace the entire page at once**.
 
 Finally, no more fragments. No more partials. Every. Request. Rebuilds. The. Entire. Page; from a single `render()` call on the backend. Full-page rebuilding eliminates most desync problems. Because everytime you rebuild, you are up to date. No ifs or buts. This is similar to [immediate mode rendering](https://en.wikipedia.org/wiki/Immediate_mode_(computer_graphics)) in the graphics world.
 
@@ -103,11 +103,11 @@ The server will send the entire page as HTML in a response (specifically the `<b
 
 Oh you're still here? Unfortunately, a lot of developers are scared of doing this and bring up performance as a concern. First: have you actually measured and found it to be a problem?
 
-To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Datastar was born out of a desire for performance and sanity, by someone who was not traditionally a web developer. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has a habit to buy into complex solutions that "scale", usually by layering more services and gluing them together. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
+To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar) is a great starting point. Datastar was created out of a desire for performance and sanity, by someone who was not traditionally a web developer. Therefore, the performance question is answered as follows: If your server is too slow to render a view for every update, then your architecture is wrong. There is nothing fundamentally preventing you from building a system that produces a template in a reasonable amount of time. Unfortunately, the industry has a habit to buy into complex solutions that "scale", usually by layering more services and gluing them together. As an example, here is the ["References architecture" for Worpress on AWS](https://docs.aws.amazon.com/whitepapers/latest/best-practices-wordpress/reference-architecture.html). Wordpress mind you, a static site CMS. Each service adds more latency, more overhead and more headaches. To be completely truthful, 97% of CRUD apps can run on a Linux box running a binary with SQLite. The "Just use Postgres" meme should really be "Just use SQLite".
 
 **Coming up: How CQRS combined with SQLite supercharges your database performance to new heights**
 
-Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in a non-linear ways to achieve a level of performance that exceeds most people's expectations. The majority of gains are achieved by placing the data close to where it is needed.
+Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in non-linear ways to achieve a level of performance that exceeds many's expectations. Most gains are achieved by placing the data close to where it is needed.
 
 To summarize, full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
 
@@ -132,6 +132,8 @@ Remember this:
 - Brotli streaming compression over SSE: keeps the compression window for the duration of the stream
 
 An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the **delta** of the page content. Idiomorph ensures we only touch the real DOM where necessary.
+
+Side note: [Zstandard](https://en.wikipedia.org/wiki/Zstd) is even faster and more efficient than Brotli, however browser support [is not guaranteed eveywhere](https://caniuse.com/zstd).
 
 
 
@@ -161,7 +163,7 @@ This brings us to...
 
 ## Why Server-Sent Events?
 ### First of all: What are Server-Sent Events?
-To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4). For the full version, see [the WHATWG spec](https://html.spec.whatwg.org/#server-sent-events).
+To understand SSE, it is recommend to first watch [this overview video](https://www.youtube.com/watch?v=xq1dVQ-isb4).
 
 Short answer: SSE is an HTTP response type: `text/event-stream`. Other HTTP response types include `text/html`, `application/json` and `multipart/form-data`. Those are for HTML, JSON and form data respectively.
 
@@ -195,7 +197,7 @@ Datastar encourages a "push" model with full-page rebuilds similar to [immediate
 ## Why not web sockets?
 In practice, web sockets are a rarely a good choice. HTTP handles a lot functionality "for free" (compression, stateful connections, multiplexing, etc.), all natively in the browser (in C++). But with web sockets, applications must handle all of that themselves on the main thread in JavaScript. This is not only a lot overhead to manage yourself, but it also competes with everything in JavaScript performance-wise.
 
-The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's not worth it**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
+The author of Datastar has done just about everything to make web sockets work, but here's the TLDR: **it's a dead end**. There you go, you can save yourself a lot of time. Feel free to [Donate](https://data-star.dev/star_federation) to the Star Federation – a 501(c)(3) nonprofit organization behind Datastar for every hour saved.
 
 
 
@@ -331,7 +333,7 @@ Great! We scaled web workers across the machine's core count.
 
 However, we have now acquired a new bottleneck: **The database**.
 
-Notice how each web worker has its own read/write connection to the database? Each worker is competing to schedule transactions. And because each transaction could be reading and writing to/from the same rows, the database has to coordinate this in an orderly fashion while maintaining **ACID**.
+Notice how each web worker has its own read/write connection to the database? Each worker is competing to schedule transactions. And because each transaction could be reading and writing to/from the same rows, the database has to coordinate this in an orderly fashion while maintaining [ACID](https://en.wikipedia.org/wiki/ACID).
 
 In particular:
 - What happens if two workers try to edit the same row simultaneously?
@@ -352,7 +354,7 @@ The story for MySQL is also not much better, with the default isolation level of
 >  SELECT ... FOR SHARE
 > Sets a shared mode lock on any rows that are read. Other sessions can read the rows, but cannot modify them until your transaction commits. If any of these rows were changed by another transaction that has not yet committed, your query waits until that transaction ends and then uses the latest values.
 
-So while we can use multiple web workers, unless we are willing to compromise on ACID, we do not get the same scaling out of the database, as our concurrent transactions will be waiting to acquire locks.
+So while we can use multiple web workers, unless we are willing to compromise on ACID, we do not get the same scaling out of the database as our concurrent transactions will be waiting to acquire locks.
 
 What can we do about this?
 
