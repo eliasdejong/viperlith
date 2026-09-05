@@ -9,7 +9,7 @@ import apsw
 import msgspec
 import spsc_ring_threadsafe as srt
 
-import src.util.db_read_con as db
+from src.util.db_read_con import read_connection
 from src.util.jinja import templates
 from src.util.sse_generator import sse_generator
 from src.util.mpsc_queue import Q
@@ -21,12 +21,11 @@ from src.chat.types import *
 
 def _render_sync(con: apsw.Connection, sid: str) -> str:
 	t = templates.get_template("chat/main.html")
-	with con:
-		return t.render(con=con, sid=sid)
+	return t.render(con=con, sid=sid)
 
 async def render(sid: str) -> str:
-	con = next(db.con_pool)
-	return await con.async_run(_render_sync, con, sid)
+	async with read_connection() as con:
+		return await con.async_run(_render_sync, con, sid)
 
 @get("/", media_type="text/html")
 async def get_root(request: Request, sid: NamedDependency[str]) -> str:

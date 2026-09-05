@@ -19,6 +19,6 @@ con.pragma("synchronous", "normal")
 
 con.pragma("cache_size", -8192)
 con.pragma("busy_timeout", 5000)
-con.pragma("mmap_size", 4294967296)
+# con.pragma("mmap_size", 281474976710655)
 
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
