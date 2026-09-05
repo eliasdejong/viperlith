@@ -8,7 +8,7 @@ apsw.config(apsw.mapping_config["SQLITE_CONFIG_MEMSTATUS"], False)
 apsw.initialize()
 
 con = apsw.Connection(
-	os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE")),
+	os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE") + ".sqlite"),
 	flags=apsw.SQLITE_OPEN_READWRITE | apsw.SQLITE_OPEN_CREATE,
 )
 con.pragma("page_size", 4096)
