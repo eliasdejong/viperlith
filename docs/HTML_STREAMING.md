@@ -133,7 +133,7 @@ Remember this:
 
 An HTTP SSE response is kept open and we keep streaming HTML over it to the client. In practice, even when continuously re-sending the entire HTML page, no extra bytes are transmitted over the wire unless something changes. Over time, the bandwidth converges on only the **delta** of the page content. Idiomorph ensures we only touch the real DOM where necessary.
 
-Side note: [Zstandard](https://en.wikipedia.org/wiki/Zstd) is even faster and more efficient than Brotli, however browser support [is not guaranteed eveywhere](https://caniuse.com/zstd).
+Side note: [Zstandard](https://en.wikipedia.org/wiki/Zstd) is even faster and more efficient than Brotli, however browser support [is not guaranteed everywhere](https://caniuse.com/zstd).
 
 
 
