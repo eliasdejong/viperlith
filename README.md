@@ -70,6 +70,7 @@ Before running compose, make sure environment variables such as `SESSION_KEY` ar
 
 By default, the application will bind to localhost on `127.0.0.1:8000`. The application will only be accessible from the internet if you have a reverse proxy with an appropriate `proxy_pass` pointed there. If you have a different setup, edit the compose config as needed.
 
+See [.gitea/workflows/deploy.yml](.gitea/workflows/deploy.yml) for an actual CI deploy job example.
 
 
 ## Tuning
