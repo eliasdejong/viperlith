@@ -73,9 +73,58 @@ By default, the application will bind to localhost on `127.0.0.1:8000`. The appl
 
 
 ## Tuning
-Disable block device readahead to reduce excess page faults in larger-than-RAM datasets (see block devices with `lsblk`):
+### Disable block device readahead
+Block device readahead makes it so when any page is read from disk, the next N sectors are also read automatically (256 by default). This triggers excess page faults and can significantly worsen performance for larger-than-RAM databases.
+
+Readahead can be disabled by setting it to zero like so:
 	
 	sudo blockdev --setra 0 /dev/nvme0n1
+
+Unfortunately, this setting will not persist across reboots. To make the it persist, a series of steps are required:
+#### 1. Check block devices with `lsblk`:
+
+	$ lsblk
+	NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+	sda       8:0    0   75G  0 disk 
+	|-sda1    8:1    0 74.9G  0 part /
+	|-sda14   8:14   0    3M  0 part 
+	`-sda15   8:15   0  124M  0 part /boot/efi
+
+Pick your primary storage disk, in this case `sda1`.
+
+#### 2. Create a systemd service to apply the setting at startup
+
+	sudo nano /etc/systemd/system/sda1-readahead-disable.service
+
+#### 3. Paste the configuration (replace `sda1` with your block device)
+
+	[Unit]
+	Description=Disable readahead on sda1
+	Requires=dev-sda1.device
+	After=dev-sda1.device
+
+	[Service]
+	Type=oneshot
+	ExecStart=/usr/sbin/blockdev --setra 0 /dev/sda1
+
+	[Install]
+	WantedBy=multi-user.target
+
+Save and quit the file.
+
+#### 4. Reload and enable the service
+
+	sudo systemctl daemon-reload
+	sudo systemctl enable --now sda1-readahead-disable.service
+
+#### 5. Verify that readahead is set to zero
+
+	sudo blockdev --getra /dev/sda1
+
+You should see:
+
+	0
+
 
 
 ## Credits
