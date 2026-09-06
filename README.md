@@ -25,7 +25,7 @@ Viperlith consists of the following components:
 5. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
 6. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
 7. Brotli compression: Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
-
+8. [spsc-ring-threadsafe](https://pypi.org/project/spsc-ring-threadsafe): A shared memory ring buffer C extension for inter-process communication, up to 100x faster than the standard library's `multiprocessing.Queue`. Used to queue commands to the single-writer process with exclusive write access to SQLite.
 
 
 ## Architecture
