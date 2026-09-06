@@ -1,8 +1,6 @@
 import os, asyncio
-from contextlib import asynccontextmanager
 import apsw
 import apsw.bestpractice
-from src.util.frame_ticks import frame_ticks_async
 
 
 apsw.shutdown()
@@ -11,10 +9,9 @@ apsw.initialize()
 apsw.bestpractice.apply(apsw.bestpractice.recommended)
 
 DB_FILE_PATH = os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE") + ".sqlite")
-CON_POOL_SIZE = 6
+CON_POOL_SIZE = 4
 
 utility_con = None
-_con_pool = asyncio.Queue()
 _connections = []
 
 
@@ -23,10 +20,9 @@ async def con_create() -> apsw.AsyncConnection:
 		DB_FILE_PATH,
 		flags=apsw.SQLITE_OPEN_READONLY
 	)
-	await con.pragma("cache_size", -8192)
+	await con.pragma("cache_size", -4096)
 	await con.pragma("busy_timeout", 5000)
-	# await con.pragma("mmap_size", 4294967296)
-	# await con.pragma("mmap_size", 281474976710655)
+	await con.pragma("mmap_size", 4294967296)
 	return con
 
 async def con_pool_create() -> None:
@@ -39,13 +35,8 @@ async def con_pool_create() -> None:
 	)
 	for i in range(CON_POOL_SIZE):
 		con = await con_create()
-		_con_pool.put_nowait(con)
 		_connections.append(con)
 
-@asynccontextmanager
-async def read_connection() -> apsw.AsyncConnection:
-	con = await _con_pool.get()
-	try:
-		yield con
-	finally:
-		_con_pool.put_nowait(con)
+
+def get_con_by_sid(sid: str) -> apsw.AsyncConnection:
+	return _connections[hash(sid) % len(_connections)]

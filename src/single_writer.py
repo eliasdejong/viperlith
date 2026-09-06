@@ -71,7 +71,6 @@ def writer_tick():
 			""",
 			drain(Q.nickname_set)
 		)
-	con.pragma("wal_checkpoint", "full")
 
 def run_writer():
 	con.pragma("optimize", 0x10002)
