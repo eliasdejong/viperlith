@@ -39,4 +39,4 @@ async def con_pool_create() -> None:
 
 
 def get_con_by_sid(sid: str) -> apsw.AsyncConnection:
-	return _connections[hash(sid) % len(_connections)]
+	return _connections[hash(sid) % CON_POOL_SIZE]
