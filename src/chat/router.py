@@ -9,7 +9,7 @@ import apsw
 import msgspec
 import spsc_ring_threadsafe as srt
 
-from src.util.db_read_con import get_con_by_sid
+from src.util.db_read_con import con_get_by_sid
 from src.util.jinja import templates
 from src.util.sse_generator import sse_generator
 from src.util.mpsc_queue import Q
@@ -25,7 +25,7 @@ def _render_sync(con: apsw.Connection, sid: str) -> str:
 		return t.render(con=con, sid=sid)
 
 async def render(sid: str) -> str:
-	con = get_con_by_sid(sid)
+	con = con_get_by_sid(sid)
 	return await con.async_run(_render_sync, con, sid)
 
 @get("/", media_type="text/html")
