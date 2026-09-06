@@ -78,7 +78,7 @@ Block device readahead makes it so when any page is read from disk, the next N s
 
 Readahead can be disabled by setting it to zero like so:
 	
-	sudo blockdev --setra 0 /dev/nvme0n1
+	sudo blockdev --setra 0 /dev/sda1
 
 Unfortunately, this setting will not persist across reboots. To make the it persist, a series of steps are required:
 #### 1. Check block devices with `lsblk`:
