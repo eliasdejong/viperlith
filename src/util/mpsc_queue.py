@@ -12,6 +12,7 @@ from src.util.msgpack_enc import msgpack_decoder
 
 WORKER_COUNT = int(os.getenv("WEB_CONCURRENCY"))
 SHM_PATH_PREFIX = os.getenv("SHM_PATH_PREFIX")
+WORKER_SCHED_AFFINITY_ENABLED = os.getenv("WORKER_SCHED_AFFINITY_ENABLED") == "1"
 
 class Q:
 	pass
@@ -55,6 +56,8 @@ def claim():
 		try:
 			fd = os.open(path, os.O_RDWR)
 			fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+			if WORKER_SCHED_AFFINITY_ENABLED:
+				os.sched_setaffinity(0, {i % os.cpu_count()})
 			print(f"Worker claimed mapping number {i}")
 			break
 		except OSError:

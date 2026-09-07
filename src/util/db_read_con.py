@@ -37,6 +37,5 @@ async def con_pool_create() -> None:
 		con = await con_create()
 		_connections.append(con)
 
-
 def con_get_by_sid(sid: str) -> apsw.AsyncConnection:
 	return _connections[hash(sid) % CON_POOL_SIZE]

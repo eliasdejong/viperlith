@@ -10,11 +10,11 @@ from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.static_files import create_static_files_router
 from litestar.di import Provide
 
+import src.util.mpsc_queue as mpsc
 from src.util.db_read_con import con_pool_create
 from src.util.session_id import get_session_id
 from src.util.signals_json import signals_json
 from src.chat.router import router as chat_router
-import src.util.mpsc_queue as mpsc
 
 
 
@@ -25,8 +25,8 @@ session_config = CookieBackendConfig(
 @asynccontextmanager
 async def lifespan(app: Litestar):
 	# startup
+	mpsc.claim() # must be called before creating any threads
 	await con_pool_create()
-	mpsc.claim()
 	yield
 	# shutdown
 
