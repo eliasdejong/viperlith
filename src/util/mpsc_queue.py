@@ -56,9 +56,9 @@ def claim():
 		try:
 			fd = os.open(path, os.O_RDWR)
 			fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+			print(f"Worker claimed mapping number {i}")
 			if WORKER_SCHED_AFFINITY_ENABLED:
 				os.sched_setaffinity(0, {i % os.cpu_count()})
-			print(f"Worker claimed mapping number {i}")
 			break
 		except OSError:
 			if fd is not None:
