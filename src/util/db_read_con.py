@@ -1,4 +1,6 @@
-import os, asyncio, resource, time
+import os, asyncio, resource
+# import time
+from contextlib import AsyncExitStack
 import apsw
 import apsw.bestpractice
 
@@ -14,7 +16,9 @@ DB_FILE_PATH = os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE") + ".sqlit
 CON_POOL_SIZE_LOG2 = 2
 CON_SCALE_IO_PAGE_THRESHOLD = 128
 
+data_version_events = set()
 utility_con = None
+
 _connections = []
 _ru_inblock = 0
 _con_get_calls = 0
@@ -58,13 +62,16 @@ def con_get_by_sid(sid: str) -> apsw.AsyncConnection:
 		_ru_inblock = current
 	return _connections[hash(sid) & _con_idx_mask]
 
-async def transaction_cycle(con: apsw.Connection) -> None:
+async def transaction_loop() -> None:
 	ticks = frame_ticks_async().__aiter__()
+	prev_version = None
 	while True:
-		async with con:
+		version =  utility_con.pragma("data_version")
+		async with AsyncExitStack() as batch:
+			for con in _connections:
+				await batch.enter_async_context(con)
+			if version != prev_version:
+				prev_version = version
+				for event in data_version_events:
+					event.set()
 			await anext(ticks)
-
-async def transaction_commit_loop() -> None:
-	await asyncio.gather(*(
-		transaction_cycle(con) for con in _connections
-	))

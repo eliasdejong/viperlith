@@ -1,16 +1,15 @@
+import asyncio
 from collections.abc import AsyncGenerator
-import src.util.db_read_con as db
-from src.util.frame_ticks import frame_ticks_async
+from src.util.db_read_con import data_version_events
 
 
 async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) -> AsyncGenerator[str, None]:
 	try:
-		prev_version = None
-		async for _ in frame_ticks_async():
-			version =  db.utility_con.pragma("data_version")
-			if version == prev_version:
-				continue
-			prev_version = version
+		event = asyncio.Event()
+		data_version_events.add(event)
+		while True:
+			await event.wait()
+			event.clear()
 			html = await render(*args, **kwargs)
 			yield (
 				"event: datastar-patch-elements\n"
@@ -21,3 +20,5 @@ async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) 
 			)
 	except Exception as e:
 		print(f"Stream ended: {type(e).__name__}: {e}")
+	finally:
+		data_version_events.discard(event)

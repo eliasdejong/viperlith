@@ -11,7 +11,7 @@ from litestar.static_files import create_static_files_router
 from litestar.di import Provide
 
 import src.util.mpsc_queue as mpsc
-from src.util.db_read_con import con_pool_create, transaction_commit_loop
+from src.util.db_read_con import con_pool_create, transaction_loop
 from src.util.session_id import get_session_id
 from src.util.signals_json import signals_json
 from src.chat.router import router as chat_router
@@ -28,7 +28,7 @@ async def lifespan(app: Litestar):
 	mpsc.claim() # must be called before creating any threads
 	await con_pool_create()
 	tasks = [
-		asyncio.create_task(transaction_commit_loop()),
+		asyncio.create_task(transaction_loop()),
 	]
 	yield
 	for t in tasks:
