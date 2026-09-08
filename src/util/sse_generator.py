@@ -4,9 +4,9 @@ from src.util.db_read_con import data_version_events
 
 
 async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) -> AsyncGenerator[str, None]:
+	event = asyncio.Event()
+	data_version_events.add(event)
 	try:
-		event = asyncio.Event()
-		data_version_events.add(event)
 		while True:
 			await event.wait()
 			event.clear()
