@@ -1,5 +1,3 @@
--- wrk -t4 -c256 -d300s -s common.lua --latency http://127.0.0.1:8000
-
 local function envs(k, d)
 	local v = os.getenv(k)
 	return (v == nil or v == "") and d or v
@@ -31,6 +29,10 @@ local C = {
 	seed_user_count = tonumber(os.getenv("SEED_USER_COUNT")),
 	seed_msg_count = tonumber(os.getenv("SEED_MSG_COUNT")),
 }
+
+function init()
+	math.randomseed(os.time() + tonumber(tostring({}):match("0x(%x+)"), 16))
+end
 
 local fmt, random, rep = string.format, math.random, string.rep
 
