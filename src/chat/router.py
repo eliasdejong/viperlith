@@ -21,8 +21,7 @@ from src.chat.types import *
 
 def _render_sync(con: apsw.Connection, sid: str) -> str:
 	t = templates.get_template("chat/main.html")
-	with con:
-		return t.render(con=con, sid=sid)
+	return t.render(con=con, sid=sid)
 
 async def render(sid: str) -> str:
 	con = con_get_by_sid(sid)

@@ -7,7 +7,7 @@ async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) 
 	try:
 		prev_version = None
 		async for _ in frame_ticks_async():
-			version =  await db.utility_con.pragma("data_version")
+			version =  db.utility_con.pragma("data_version")
 			if version == prev_version:
 				continue
 			prev_version = version
