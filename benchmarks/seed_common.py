@@ -165,7 +165,6 @@ def seed():
 	print("============================================================")
 
 if __name__ == "__main__":
-	con.pragma("wal_autocheckpoint", 32768)
 	print("Running migration...")
 	run_migration()
 	print("================= SEEDING BENCHMARK DATA =================")
