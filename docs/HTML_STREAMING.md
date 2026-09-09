@@ -107,7 +107,7 @@ To understand Datastar's approach, the [Tao of Datastar](https://data-star.dev/g
 
 **Coming up: How CQRS combined with SQLite supercharges your database performance to new heights**
 
-Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in non-linear ways to achieve a level of performance that exceeds many's expectations. Most gains are achieved by placing the data close to where it is needed.
+Whatever your current interpretation is, you might need to re-calibrate your intuition about database performance. For starters: [SQLite can reach over a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html) and scales near-linearly with core count for read queries. The primary techniques employed are fast local NVMe storage (directly slotted in the motherboard, no SAN networked storage that every cloud vendor sells you), batched transactions and **having only a single writer** (more on that later). All of these factors combine in non-linear ways to achieve a level of performance that exceeds many people's expectations. Most gains are achieved by placing the data close to where it is needed.
 
 To summarize, full-page rebuilds are faster than you think, provided your database and web server are also fast, which they should be.
 
@@ -371,7 +371,7 @@ First, we will switch our database to SQLite. An out-of-process databases such a
 - If remote: TCP/IP + SSL/TLS
 - Startup time
 
-However, this will not actually solve the concurrency problem. If we simply copy the previous architecture, we will run into the infamous `SQLITE_BUSY` error.
+However, this will not actually solve the concurrency problem. If we simply copy the previous architecture, we will run into the infamous `SQLITE_BUSY` error. This is a direct result of trying to write to the same database file from multiple database connections.
 
 So what to do?
 
@@ -380,11 +380,13 @@ So what to do?
 ## CQRS Architecture
 CQRS, or "Command Query Responsibility Segregation" is really just a fancy way to say "separating reads from writes".
 
+Inside the workers, we place read-only connections in their own dedicated threads to scale them horizontally with core count, and so as not to block the event loop.
+
 We will make a big change: web workers are themselves not allowed to write to the database. Instead, their connections are **read-only** and a separate 'single-writer' process holds **exclusive write access**. If a worker needs to affect a write to the database, it will place a command into the queue for the single-writer.
 
 A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves **DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
 
-This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Because workers read from the same `mmap` page cache, reads scale horizontally with core count without cache duplication. Writes can be batched for maximum throughput while still being fully serialized & ACID. The single-writer drains the queues and processes commands on a fixed frame rate i.e. interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
+This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Writes can be batched for maximum throughput while still being fully serialized & ACID. The single-writer drains the queues and processes commands on a fixed frame rate i.e. interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
 However, since each worker lives inside its own process, by default, they have no way of communicating with the writer's process. To solve this, we allocate the command queues in shared memory[^2] to enable inter-process communication. Viperlith uses my lockless ring buffer C extension which is [100x faster than the standard library's `multiprocessing.Queue`](https://pypi.org/project/spsc-ring-threadsafe/).
 ```
@@ -425,7 +427,7 @@ A typical interaction cycle goes like this:
 10. Client sees the updated page
 
 We now have obtained the following features:
-1. Writes never block or run into locks
+1. Writes never block or run into locks (single writer)
 2. Readers and writer don't block eachother (ensured by WAL mode)
 3. Readers scale horizontally with core count
 4. No cache duplication / Readers read from the same page cache (ensured by mmap)
