@@ -18,7 +18,5 @@ async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) 
 				"data: elements " + html.replace("\n", "\ndata: elements ")
 				+ "\n\n"
 			)
-	except Exception as e:
-		print(f"Stream ended: {type(e).__name__}: {e}")
 	finally:
 		data_version_events.discard(event)
