@@ -17,4 +17,5 @@ def run_migration():
 			con.pragma("user_version", migr_version)
 
 if __name__ == "__main__":
+	con.pragma("wal_autocheckpoint", 32768)
 	run_migration()

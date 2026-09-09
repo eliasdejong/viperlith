@@ -41,11 +41,6 @@ def zipf_rank(seed: int, count: int, alpha: float) -> int:
 	return max(1, min(count, int(rank)))
 
 def seed():
-	print("Creating schema...")
-	run_migration()
-
-	print("================= SEEDING BENCHMARK DATA =================")
-
 	print("Creating channels...")
 	with con:
 		con.executemany("""
@@ -57,7 +52,6 @@ def seed():
 				for channel_id in range(1, SEED_CHANNEL_COUNT + 1)
 			)
 		)
-	con.pragma("wal_checkpoint", "full")
 
 	print("Creating users...")
 	with con:
@@ -83,7 +77,6 @@ def seed():
 			)
 		)
 		con.execute("create index idx_users_session_id on users(session_id)")
-	con.pragma("wal_checkpoint", "full")
 
 	print("Creating channel memberships...")
 	def membership_rows():
@@ -112,7 +105,6 @@ def seed():
 			membership_rows(),
 		)
 		con.execute("create index idx_channel_memberships_channel_id on channel_memberships(channel_id)")
-	con.pragma("wal_checkpoint", "full")
 
 	print("Creating messages...")
 	con.execute("drop index if exists idx_messages_channel_ts")
@@ -137,7 +129,7 @@ def seed():
 				created_ts,
 			)
 
-	COMMIT_BATCH_SIZE = 500_000
+	COMMIT_BATCH_SIZE = 1_000_000
 	rows_written = 0
 	while rows_written < SEED_MSG_COUNT:
 		batch_end = rows_written + min(COMMIT_BATCH_SIZE, SEED_MSG_COUNT - rows_written)
@@ -153,7 +145,6 @@ def seed():
 				""",
 				message_rows(rows_written, batch_end),
 			)
-		con.pragma("wal_checkpoint", "full")
 		rows_written = batch_end
 		print(f"Rows written: {rows_written} / {SEED_MSG_COUNT}")
 
@@ -174,4 +165,8 @@ def seed():
 	print("============================================================")
 
 if __name__ == "__main__":
+	con.pragma("wal_autocheckpoint", 32768)
+	print("Running migration...")
+	run_migration()
+	print("================= SEEDING BENCHMARK DATA =================")
 	seed()
