@@ -8,6 +8,11 @@ import src.util.mpsc_queue as mpsc
 
 
 
+DB_ANALYZE_INTERVAL_HOURS = int(os.getenv("DB_ANALYZE_INTERVAL_HOURS"))
+FRAME_RATE = int(os.getenv("FRAME_RATE"))
+
+
+
 def writer_tick():
 	with con:
 		# Insert new users
@@ -74,12 +79,14 @@ def writer_tick():
 	con.pragma("wal_checkpoint", "restart")
 
 def run_writer():
+	print("Optimizing database...")
 	con.pragma("optimize", 0x10002)
+	print("Attaching to shared memory...")
 	mpsc.attach_all()
 	frames = 0
 	for _ in frame_ticks():
 		writer_tick()
-		if frames % (int(os.getenv("DB_ANALYZE_INTERVAL_HOURS")) * 3600 * int(os.getenv("FRAME_RATE"))) == 0:
+		if frames % (DB_ANALYZE_INTERVAL_HOURS * 3600 * FRAME_RATE) == 0:
 			con.pragma("optimize")
 		frames += 1
 
