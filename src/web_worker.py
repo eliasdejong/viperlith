@@ -1,12 +1,10 @@
 import os, asyncio
-import uvicorn
 import base64
 from contextlib import asynccontextmanager
 
 from litestar import Litestar
 from litestar.config.compression import CompressionConfig
 from litestar.middleware.session.client_side import CookieBackendConfig
-from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.static_files import create_static_files_router
 from litestar.di import Provide
 
