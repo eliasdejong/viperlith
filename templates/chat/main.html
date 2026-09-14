@@ -55,21 +55,21 @@
 			) %}
 				<button	data-on:mousedown="
 							@post('/chat/channel-open', {
-								payload: {channelOpen: '{{ i[0] }}'}
+								payload: {channelOpen: '{{ i.name }}'}
 							})"
-						{% if i[1] %} disabled {% endif %}
+						{% if i.id %} disabled {% endif %}
 						class="flex flex-row justify-center items-center
 								px-2 min-h-12 overflow-hidden rounded-md hover:cursor-pointer
-								{% if i[1] %}
+								{% if i.is_current_channel %}
 								text-black bg-slate-500
 								{% else %}
 								text-white hover:bg-slate-700 border-2 border-slate-500 
 								active:border-cyan-100 transition duration-150
 								{% endif %}">
-					<span class="flex flex-grow break-all">{{ i[0] }}</span>
+					<span class="flex flex-grow break-all">{{ i.name }}</span>
 					<span data-on:mousedown="
 							@post('/chat/channel-close', {
-								payload: {channelClose: '{{ i[0] }}'}
+								payload: {channelClose: '{{ i.name }}'}
 							})"
 						class="py-1 px-2 hover:bg-slate-400 rounded-md
 								active:ring-2 active:ring-cyan-100 transition duration-150">
@@ -127,13 +127,13 @@
 				<div style="overflow-anchor: none;"
 					class="m-1.5 text-white">
 					<p class="text-slate-500">
-						{{ i[0] }}
+						{{ i.nickname }}
 						<span
-							data-text="(new Date({{ i[2] * 1000 }})).toLocaleString()"
+							data-text="(new Date({{ i.created_ts * 1000 }})).toLocaleString()"
 							class="text-slate-700 text-xs"
 						></span>
 					</p>
-					<p class="break-all">{{ i[1] }}</p>
+					<p class="break-all">{{ i.content }}</p>
 				</div>
 			{% endfor %}
 		</div>

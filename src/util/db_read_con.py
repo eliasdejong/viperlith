@@ -33,6 +33,9 @@ async def con_create() -> apsw.AsyncConnection:
 	await con.pragma("cache_size", -4096)
 	await con.pragma("busy_timeout", 5000)
 	await con.pragma("mmap_size", 4294967296)
+	con.row_trace = apsw.ext.DataClassRowFactory(
+		dataclass_kwargs={"frozen": True}
+	)
 	return con
 
 async def con_pool_create() -> None:
