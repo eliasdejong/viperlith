@@ -57,7 +57,7 @@
 							@post('/chat/channel-open', {
 								payload: {channelOpen: '{{ i.name }}'}
 							})"
-						{% if i.id %} disabled {% endif %}
+						{% if i.is_current_channel %} disabled {% endif %}
 						class="flex flex-row justify-center items-center
 								px-2 min-h-12 overflow-hidden rounded-md hover:cursor-pointer
 								{% if i.is_current_channel %}
