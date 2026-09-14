@@ -144,12 +144,13 @@
 			<textarea
 				data-bind:message-send
 				data-on:keydown="
-					evt.key == 'Enter' && !evt.shiftKey
-					&& (
-						evt.preventDefault(),
-						el.value != ''
-						&& @post('/chat/message-send').then(() => (el.value = '', el.focus()))
-					)"
+					if (evt.key == 'Enter' && !evt.shiftKey) {
+						evt.preventDefault();
+						if (el.value != '') {
+							@post('/chat/message-send');
+							el.value = '';
+						}
+					}"
 				type="text"
 				placeholder="Type your message..."
 				autocapitalize="off"
