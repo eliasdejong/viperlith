@@ -37,7 +37,7 @@ def writer_tick():
 			from users u
 			where u.session_id = :session_id;
 
-			update users as u
+			update users
 			set current_channel_id = (select id from channels where name = :channelOpen)
 			where u.session_id = :session_id;
 			""",
@@ -49,7 +49,7 @@ def writer_tick():
 
 		# Close channels
 		con.executemany("""
-			DELETE from channel_memberships as cm
+			DELETE from channel_memberships
 			where user_id = (select id from users where session_id = :session_id)
 				and channel_id = (select id from channels where name = :channelClose)
 			""",
@@ -70,7 +70,7 @@ def writer_tick():
 
 		# Set nicknames
 		con.executemany("""
-			UPDATE users as u
+			UPDATE users
 			set nickname = :nicknameSet
 			where session_id = :session_id
 			""",
