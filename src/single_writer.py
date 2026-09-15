@@ -37,7 +37,7 @@ def writer_tick():
 			from users u
 			where u.session_id = :session_id;
 
-			update users u
+			update users as u
 			set current_channel_id = (select id from channels where name = :channelOpen)
 			where u.session_id = :session_id;
 			""",
