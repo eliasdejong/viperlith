@@ -33,9 +33,7 @@
 		<p>Max. 32 characters</p>
 		<input
 			data-bind:channel-open
-			data-effect__debounce.400ms="
-				$channelOpen;
-				@post('/chat/channel-open/validate')"
+			dataon:input__debounce.400ms="@post('/chat/channel-open/validate')"
 			type="text"
 			minlength="1"
 			maxlength="32"
@@ -53,11 +51,10 @@
 	<div class="flex flex-row pt-4 justify-evenly items-center gap-3 border-t border-slate-800">
 		<button
 			data-attr:disabled="$_channelOpenError != ''"
-			data-on:click="
-				@post('/chat/channel-open').then(() => (
-					$channelOpen = '',
-					$_infoDialogOpen = false
-				))"
+			data-on:mousedown="
+				@post('/chat/channel-open');
+				$channelOpen = '';
+				$_infoDialogOpen = false;"
 			class="px-6 py-2 min-w-36
 					text-white bg-slate-800 hover:bg-slate-700
 					cursor-pointer outline-none select-none rounded-md
