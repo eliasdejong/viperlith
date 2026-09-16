@@ -33,7 +33,7 @@
 		<p>Max. 32 characters</p>
 		<input
 			data-bind:channel-open
-			dataon:input__debounce.400ms="@post('/chat/channel-open/validate')"
+			data-on:input__debounce.400ms="@post('/chat/channel-open/validate')"
 			type="text"
 			minlength="1"
 			maxlength="32"
