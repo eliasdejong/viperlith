@@ -8,8 +8,6 @@ async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) 
 	data_version_events.add(event)
 	try:
 		while True:
-			await event.wait()
-			event.clear()
 			html = await render(*args, **kwargs)
 			yield (
 				"event: datastar-patch-elements\n"
@@ -18,5 +16,7 @@ async def sse_generator(render: Callable[..., Awaitable[str]], *args, **kwargs) 
 				"data: elements " + html.replace("\n", "\ndata: elements ")
 				+ "\n\n"
 			)
+			await event.wait()
+			event.clear()
 	finally:
 		data_version_events.discard(event)
