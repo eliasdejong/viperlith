@@ -67,7 +67,7 @@
 								active:border-cyan-100 transition duration-150
 								{% endif %}">
 					<span class="flex flex-grow break-all">{{ i.name }}</span>
-					<span data-on:mousedown="
+					<span data-on:mousedown__stop="
 							@post('/chat/channel-close', {
 								payload: {channelClose: '{{ i.name }}'}
 							})"
