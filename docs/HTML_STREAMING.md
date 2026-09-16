@@ -373,9 +373,9 @@ First, we will switch our database to SQLite. An out-of-process databases such a
 - If remote: TCP/IP + SSL/TLS
 - Startup time
 
-SQLite's out-of-the-box defaults aren't great, and even more upsetting is that handling of connections and transaction lifecycles can have an outsized effect on performance. This is mainly an application concern, and most SQLite drivers don't do this for you, so in practice most potential remains underutilized. Viperlith employs several techniques to extract the most performance:
+SQLite's out-of-the-box defaults aren't great, and even more upsetting is that handling of connections and transaction lifecycles can have an outsized effect on performance. This is mainly an application concern, and most SQLite drivers don't do this for you, so many applications leave this potential untapped. Viperlith employs several techniques to extract the most performance:
 - Writer & reader transaction batching at a fixed `FRAME_RATE` (default 10), amortizes transaction overhead.
-- `wal_checkpoint = RESTART` after every writer commit, this greatly accelerates readers.
+- `wal_checkpoint = RESTART` after every writer commit, this greatly accelerates readers during concurrent writes.
 - One connection pool (default size 4) per worker, with thread-per-connection, using APSW's `AsyncConnection` interface.
 - "Dynamic" connection utilization: More connections are only needed to overlap IO for larger-than-RAM datasets. For smaller datasets it's more efficient to use only a single connection per worker. The `ru_inblock` field of the `getrusage()` syscall is used as a heuristic for this.
 - `mmap_size` enabled for fast syscall-free access in small datasets, but limited to 4 GB address space to prevent page table thrashing.
