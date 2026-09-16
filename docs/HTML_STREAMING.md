@@ -448,7 +448,9 @@ Alas, we can increase worker count without running into concurrency problems!
 ## Benchmark Results
 Of course, all of this talking would be pointless if we aren't able to see any gains.
 
-This benchmark measures requests per second (RPS) under different workloads in the context of a hypermedia application. To serve a read request, the server must issue 3 separate DB queries touching all 4 tables. The queries perform several joins and require at least 500 completely (pseudo-)random pages from the database. This data is then used to render a ~190 kB HTML template (using [Jinja](https://jinja.palletsprojects.com/en/stable/)), which must then be [Brotli-compressed](https://en.wikipedia.org/wiki/Brotli) and returned to the client.
+Our benchmark measures requests per second (RPS) under different workloads in the context of a hypermedia application. To serve a read request, the server must issue 3 separate DB queries touching all 4 tables. The queries perform several joins and require at least 500 completely (pseudo-)random pages from the database. This data is then used to render a ~190 kB HTML template (using [Jinja](https://jinja.palletsprojects.com/en/stable/)), which must then be [Brotli-compressed](https://en.wikipedia.org/wiki/Brotli) and returned to the client.
+
+For hypermedia applications, the server spends a significant portion of its time querying the database and rendering HTML templates. The database is thus a significant factor in the performance of the application. This benchmark is not entirely scientific: we are also using different web frameworks (Litestar vs FastAPI). This is because Postgres + FastAPI are both very popular, and we consider this combination to be the "mainstream baseline".
 
 ### 4 GB Dataset
 ![hypermedia_web_server_throughput_4gb](images/hypermedia_web_server_throughput_4gb.png)
