@@ -25,7 +25,9 @@ This benchmark measures requests per second (RPS) under different workloads in t
 ### 40 GB Dataset
 ![hypermedia_web_server_throughput_40gb](docs/images/hypermedia_web_server_throughput_40gb.png)
 
-### All results
+### Benchmark Results
+Ths exact application was also built using FastAPI and Postgres 🐘. Check it out [here](https://github.com/eliasdejong/starcord-fastapi-postgres).
+
 To see all benchmark results or to replicate them yourself, see the [benchmark respository](https://github.com/eliasdejong/hypermedia-crud-benchmark-python).
 
 
@@ -36,7 +38,7 @@ Viperlith consists of the following components:
 2. [Litestar ASGI framework](https://litestar.dev/): Uses up to [10x less memory as compared to FastAPI](https://github.com/kunesj/fastapi-litestar-memory-benchmark).
 3. [uvicorn](https://uvicorn.dev/): Popular ASGI web server.
 4. [MsgSpec](https://msgspec.dev/): Provides the same validation capabilities as [Pydantic](https://pydantic.dev/docs/validation/latest/get-started/) while [serializing an order of magnitude faster](https://msgspec.dev/benchmarks).
-5. [SQLite](https://www.sqlite.org/) through [APSW](https://github.com/rogerbinns/apsw): Local SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. In many projects, the potential remains underutilized as SQLite drivers don't do this for you. APSW provides better control, features and error handling compared to Python's builtin `sqlite3` module.
+5. [SQLite](https://www.sqlite.org/) through [APSW](https://github.com/rogerbinns/apsw): Local SQLite offers minimal operational overhead, and when properly tuned, significantly outperforms Postgres & MySQL for most workloads. APSW provides better control, features and error handling compared to Python's builtin `sqlite3` module.
 6. [Jinja templates](https://jinja.palletsprojects.com/en/stable/): Templating engine used to render HTML templates.
 7. [Tailwind CSS](https://tailwindcss.com/): For declarative styling directly inside the markup.
 8. [Brotli compression](https://en.wikipedia.org/wiki/Brotli): Used in Litestar's `CompressionConfig` to minimize bandwidth for streaming HTML over the wire.
