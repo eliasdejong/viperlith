@@ -1,4 +1,4 @@
-# Why HTML Streaming is the Future of the Web
+# An Introduction to HTML Streaming for Interactive Web Applications
 ## Introduction
 `datastar.js` is a lightweight (11kB) hypermedia framework similar to HTMX, but with a different view on server architecture, favoring CQRS, **HTML streaming** and Server-Sent Events. "push" events as opposed to client-side polling with request-response cycles.
 
@@ -371,7 +371,15 @@ First, we will switch our database to SQLite. An out-of-process databases such a
 - If remote: TCP/IP + SSL/TLS
 - Startup time
 
-However, this will not actually solve the concurrency problem. If we simply copy the previous architecture, we will run into the infamous `SQLITE_BUSY` error. This is a direct result of trying to write to the same database file from multiple database connections.
+SQLite's out-of-the-box defaults aren't great, and even more upsetting is that handling of connections and transaction lifecycles can have an outsized effect on performance. This is mainly an application concern, and most SQLite drivers don't do this for you, so in practice most potential remains underutilized. Viperlith employs several techniques to extract the most performance:
+- Writer & reader transaction batching at a fixed `FRAME_RATE` (default 10), amortizes transaction overhead.
+- `wal_checkpoint = RESTART` after every writer commit, this greatly accelerates readers.
+- One connection pool (default size 4) per worker, with thread-per-connection, using APSW's `AsyncConnection` interface.
+- "Dynamic" connection utilization: More connections are only needed to overlap IO for larger-than-RAM datasets. For smaller datasets it's more efficient to use only a single connection per worker. The `ru_inblock` field of the `getrusage()` syscall is used as a heuristic for this.
+- `mmap_size` enabled for fast syscall-free access in small datasets, but limited to 4 GB address space to prevent page table thrashing.
+- Connection routing by hash of `session_id` for better locality.
+
+However, all of this will not actually solve the concurrency problem. If we simply copy the previous architecture, we will run into the infamous `SQLITE_BUSY` error. This is a direct result of trying to write to the same database file from multiple database connections.
 
 So what to do?
 
@@ -434,6 +442,22 @@ We now have obtained the following features:
 5. Batching unlocks further increased write throughput
 
 Alas, we can increase worker count without running into concurrency problems!
+
+
+
+## Benchmark Results
+Of course, all of this talking would be pointless if we aren't able to see any gains.
+
+This benchmark measures requests per second (RPS) under different workloads in the context of a hypermedia application. To serve a read request, the server must issue 3 separate DB queries touching all 4 tables. The queries perform several joins and require at least 500 completely (pseudo-)random pages from the database. This data is then used to render a ~190 kB HTML template (using [Jinja](https://jinja.palletsprojects.com/en/stable/)), which must then be [Brotli-compressed](https://en.wikipedia.org/wiki/Brotli) and returned to the client.
+
+### 4 GB Dataset
+![hypermedia_web_server_throughput_4gb](docs/images/hypermedia_web_server_throughput_4gb.png)
+
+### 40 GB Dataset
+![hypermedia_web_server_throughput_40gb](docs/images/hypermedia_web_server_throughput_40gb.png)
+
+### Benchmark Repository
+To see all benchmark results, discussion or replicate them yourself, see the [benchmark respository](https://github.com/eliasdejong/hypermedia-crud-benchmark-python).
 
 
 
