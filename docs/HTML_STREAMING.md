@@ -451,10 +451,10 @@ Of course, all of this talking would be pointless if we aren't able to see any g
 This benchmark measures requests per second (RPS) under different workloads in the context of a hypermedia application. To serve a read request, the server must issue 3 separate DB queries touching all 4 tables. The queries perform several joins and require at least 500 completely (pseudo-)random pages from the database. This data is then used to render a ~190 kB HTML template (using [Jinja](https://jinja.palletsprojects.com/en/stable/)), which must then be [Brotli-compressed](https://en.wikipedia.org/wiki/Brotli) and returned to the client.
 
 ### 4 GB Dataset
-![hypermedia_web_server_throughput_4gb](docs/images/hypermedia_web_server_throughput_4gb.png)
+![hypermedia_web_server_throughput_4gb](images/hypermedia_web_server_throughput_4gb.png)
 
 ### 40 GB Dataset
-![hypermedia_web_server_throughput_40gb](docs/images/hypermedia_web_server_throughput_40gb.png)
+![hypermedia_web_server_throughput_40gb](images/hypermedia_web_server_throughput_40gb.png)
 
 ### Benchmark Repository
 To see all benchmark results, discussion or replicate them yourself, see the [benchmark respository](https://github.com/eliasdejong/hypermedia-crud-benchmark-python).
