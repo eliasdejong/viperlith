@@ -8,7 +8,7 @@ Most SPA frameworks (e.g. React, Vue, Angular) expose JSON endpoints on the serv
 
 Hypermedia streaming makes it possible to build rich interactive user experiences just using HTML, without requiring (heavy) JavaScript SPA frameworks, resulting in application that perform better and are generally simpler to build and maintain.
 
-This page will explain the concept of HTML Streaming and why it is the future of web development.
+This page will explain the concept of HTML Streaming, working towards the benefits of employing a CQRS-architecture.
 
 
 
@@ -39,7 +39,9 @@ Datastar instead ships with **signals** built-in. They can be thought of as clie
 ### Problem #2 (the big one): Polling Instead of Push
 But there is a more fundamental difference: HTMX relies on request-response interactions with partial HTML-fragments "patched" into the DOM. Remember: your backend returns HTML not JSON. This means that most interactions consist of page fragments requested from the server, each one returning an HTML template patched in place.
 
-However, this creates a problem of "patchwork". HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI updates consists of these different triggers, questions arise; namely, which parts do you update, and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which updates to send?
+![HTMX: What do you update where and when?](images/htmx_what_do_you_update_where.jpg)
+
+However, this creates a problem of "patchwork". HTMX allows requests to be sent on any regular event (`input`, `click` etc.) via `hx-trigger` or using timers: `hx-trigger="every 1s"`. However when your UI updates consists of these different triggers, questions arise; namely, which parts do you update, and when? You swap one fragment, then another part of the page might have just become stale, showing outdated information. How do you coordinate which updates to send? What do you update where and when?
 
 
 
