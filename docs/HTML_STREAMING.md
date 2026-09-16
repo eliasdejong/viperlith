@@ -394,7 +394,7 @@ Inside the workers, we place read-only connections in their own dedicated thread
 
 We will make a big change: web workers are themselves not allowed to write to the database. Instead, their connections are **read-only** and a separate 'single-writer' process holds **exclusive write access**. If a worker needs to affect a write to the database, it will place a command into the queue for the single-writer.
 
-A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves **DO NOT** process business logic. They simply enqueue commands for the single-writer to deal with.
+A "command" in this case means an "event to be processed by the single-writer". It could lead to a database write. Or not, depending on business logic. When a worker receives a request from a client, it will only validate the *shape* of the request. Workers themselves **DO NOT** process commands, they simply enqueue commands for the single-writer to deal with.
 
 This design effectively serializes all writes at the application layer, meaning `SQLITE_BUSY` is never encountered. Writes can be batched for maximum throughput while still being fully serialized & ACID. The single-writer drains the queues and processes commands on a fixed frame rate i.e. interval. Batching makes it possible to reach as much as [a million inserts per second](https://andersmurphy.com/2026/06/05/the-perils-of-uuid-primary-keys-in-sqlite.html).
 
