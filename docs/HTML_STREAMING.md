@@ -465,10 +465,16 @@ To see all benchmark results, discussion or replicate them yourself, see the [be
 
 
 
-## Finally! We can get back to building CRUD
-If all of this sounded like a lot, you are not alone. Luckily, you can now get back to building CRUD in style.
+## Conclusion
+Finally! We can get back to building CRUD, but this time in style.
 
-To join a community of like-minded people enthusiastic about web, hypermedia, performance and databases consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
+Recommended reading: [The Tao of Datastar](https://data-star.dev/guide/the_tao_of_datastar)
+
+<img src="images/pov_you_embrace_fat_morph_and_cqrs.jpg" alt="pov_you_embrace_fat_morph_and_cqrs" width="800" height="800">
+
+Letting the backend be the source of truth lets us keep minimal state on the client. A page is a resource, for which we keep open a stream. When the view needs to change, we just send a fat morph. No worrying about invalidation or stale client-side state. We keep only minimal state outside the DB. To collect user input, we send signals to the server. JSON up, HTML down. 
+
+If all of this sounded like a lot, you are not alone. To join a community of like-minded people enthusiastic about web, hypermedia, performance and databases consider [joining the Datastar Discord](https://discord.gg/bnRNgZjgPh).
 
 That is all! I hope you enjoyed reading this. And remember: may your cloud bills be lean and your morphs be fat.
 
