@@ -68,10 +68,13 @@ Generate a `SESSION_KEY` with `openssl rand -hex 16` and change configurations i
 	sudo mkdir -p /var/lib/viperlith
 	sudo chown $USER /var/lib/viperlith
 
-### 3: (Optional) Enable launch script permissions
+### 3: Install packages into virtual environment
+	uv sync
+
+### 4: (Optional) Enable launch script permissions
 	sudo chmod +x ./launch.sh
 
-### 4: Run the launch script
+### 5: Run the launch script
 	./launch.sh
 
 This will launch the application in debug mode with hot reload.
