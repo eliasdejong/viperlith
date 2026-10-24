@@ -2,6 +2,7 @@ import os
 from itertools import chain
 
 from src.util.db_write_con import con
+from src.util.executemany_isolated import executemany_isolated
 from src.util.frame_ticks import frame_ticks
 from src.util.mpsc_queue import Q, drain
 import src.util.mpsc_queue as mpsc
@@ -12,23 +13,22 @@ DB_ANALYZE_INTERVAL_HOURS = int(os.getenv("DB_ANALYZE_INTERVAL_HOURS"))
 FRAME_RATE = int(os.getenv("FRAME_RATE"))
 
 
-
 def writer_tick():
 	with con:
 		# Insert new users
-		new_users = con.executemany("""
+		new_users = list(executemany_isolated(con, """
 			INSERT or ignore into users (session_id, current_channel_id)
 			values (
 				:session_id,
 				(select id from channels where name = 'starcord')
 			)
-			returning session_id
+			returning session_id;
 			""",
-			drain(Q.user_insert)
-		)
+			drain(Q.user_insert),
+		))
 
 		# Open channels
-		con.executemany("""
+		executemany_isolated(con, """
 			INSERT or ignore into channels (name)
 			values (:channelOpen);
 
@@ -44,37 +44,37 @@ def writer_tick():
 			chain(
 				({"channelOpen": "starcord", "session_id": u[0]} for u in new_users),
 				drain(Q.channel_open),
-			)
+			),
 		)
 
 		# Close channels
-		con.executemany("""
+		executemany_isolated(con, """
 			DELETE from channel_memberships
 			where user_id = (select id from users where session_id = :session_id)
-				and channel_id = (select id from channels where name = :channelClose)
+				and channel_id = (select id from channels where name = :channelClose);
 			""",
-			drain(Q.channel_close)
+			drain(Q.channel_close),
 		)
 
 		# Insert messages
-		con.executemany("""
+		executemany_isolated(con, """
 			INSERT into messages (channel_id, user_id, content)
 			values (
 				(select current_channel_id from users where session_id = :session_id),
 				(select id from users where session_id = :session_id),
 				:messageSend
-			)
+			);
 			""",
-			drain(Q.msg_send)
+			drain(Q.msg_send),
 		)
 
 		# Set nicknames
-		con.executemany("""
+		executemany_isolated(con, """
 			UPDATE users
 			set nickname = :nicknameSet
-			where session_id = :session_id
+			where session_id = :session_id;
 			""",
-			drain(Q.nickname_set)
+			drain(Q.nickname_set),
 		)
 	con.pragma("wal_checkpoint", "restart")
 
