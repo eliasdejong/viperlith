@@ -31,6 +31,7 @@ async def lifespan(app: Litestar):
 	yield
 	for t in tasks:
 		t.cancel()
+	await asyncio.gather(*tasks, return_exceptions=True)
 	# shutdown
 
 app = Litestar(
