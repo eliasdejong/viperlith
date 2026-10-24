@@ -3,9 +3,8 @@
 if ! [ -e tailwindcss ]
 then
 	echo Downloading Tailwind CSS binary...
-	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.3/tailwindcss-linux-x64
-	chmod +x tailwindcss-linux-x64
-	mv tailwindcss-linux-x64 tailwindcss
+	curl -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.3/tailwindcss-linux-x64 -o tailwindcss
+	chmod +x tailwindcss
 fi
 
 echo Starting Tailwind CSS...
