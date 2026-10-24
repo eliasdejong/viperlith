@@ -5,6 +5,7 @@ import apsw
 import apsw.bestpractice
 
 from src.util.frame_ticks import frame_ticks_async
+from src.util.data_version import data_version_bump
 
 
 apsw.shutdown()
@@ -16,7 +17,6 @@ DB_FILE_PATH = os.path.join(os.getenv("DB_PATH"), os.getenv("DB_FILE") + ".sqlit
 CON_POOL_SIZE_LOG2 = 2
 CON_SCALE_IO_PAGE_THRESHOLD = 128
 
-data_version_events = set()
 utility_con = None
 
 _connections = []
@@ -75,6 +75,5 @@ async def transaction_loop() -> None:
 				await batch.enter_async_context(con)
 			if version != prev_version:
 				prev_version = version
-				for event in data_version_events:
-					event.set()
+				await data_version_bump()
 			await anext(ticks)
