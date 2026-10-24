@@ -1,5 +1,4 @@
 import os
-from itertools import chain
 
 from src.util.db_write_con import con
 from src.util.executemany_isolated import executemany_isolated
@@ -15,17 +14,21 @@ FRAME_RATE = int(os.getenv("FRAME_RATE"))
 
 def writer_tick():
 	with con:
-		# Insert new users
-		new_users = list(executemany_isolated(con, """
+		# Insert new users (+ default starcord membership)
+		executemany_isolated(con, """
 			INSERT or ignore into users (session_id, current_channel_id)
 			values (
 				:session_id,
 				(select id from channels where name = 'starcord')
-			)
-			returning session_id;
+			);
+
+			INSERT or ignore into channel_memberships (user_id, channel_id)
+			select u.id, u.current_channel_id
+			from users u
+			where u.session_id = :session_id;
 			""",
 			drain(Q.user_insert),
-		))
+		)
 
 		# Open channels
 		executemany_isolated(con, """
@@ -41,10 +44,7 @@ def writer_tick():
 			set current_channel_id = (select id from channels where name = :channelOpen)
 			where u.session_id = :session_id;
 			""",
-			chain(
-				({"channelOpen": "starcord", "session_id": u[0]} for u in new_users),
-				drain(Q.channel_open),
-			),
+			drain(Q.channel_open),
 		)
 
 		# Close channels
